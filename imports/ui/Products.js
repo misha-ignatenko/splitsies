@@ -29,6 +29,7 @@ class Products extends Component {
                 <Product
                     key={product._id}
                     openOffersCount={_openOffersCount}
+                    productData={product}
                 />
             );
         })
@@ -36,10 +37,9 @@ class Products extends Component {
 
     renderCategories() {
         return this.props.categories.map((category) => {
-            console.log("category rendering: ", category);
             return (
                 <Row key={category._id}>
-                    <Col sm="12">{category.name}</Col>
+                    <Col sm="12"><h3>{category.name}</h3>{category.description}</Col>
                     {this.renderProducts(category._id)}
                 </Row>
             );
