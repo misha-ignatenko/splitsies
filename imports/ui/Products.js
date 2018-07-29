@@ -3,7 +3,7 @@ import { Meteor } from 'meteor/meteor';
 import { withTracker } from 'meteor/react-meteor-data';
 import { Row, Col } from 'reactstrap';
 
-import { Offers } from '../api/offers.js';
+import { Offers as OffersCollection } from '../api/offers.js';
 import { Products as ProductsCollection } from '../api/products.js';
 import { Categories as CategoriesCollection } from '../api/categories.js';
 
@@ -27,9 +27,11 @@ class Products extends Component {
 
             return (
                 <Product
+                    history={this.props.history}
                     key={product._id}
                     openOffersCount={_openOffersCount}
                     productData={product}
+                    offering={this.props.offering}
                 />
             );
         })
@@ -38,10 +40,13 @@ class Products extends Component {
     renderCategories() {
         return this.props.categories.map((category) => {
             return (
-                <Row key={category._id}>
-                    <Col sm="12"><h3>{category.name}</h3>{category.description}</Col>
-                    {this.renderProducts(category._id)}
-                </Row>
+                <div key={category._id}>
+                    <Row>
+                        <Col sm="12"><h3>{category.name}</h3>{category.description}</Col>
+                        {this.renderProducts(category._id)}
+                    </Row>
+                    <br/>
+                </div>
             );
         })
     }
@@ -55,22 +60,19 @@ class Products extends Component {
     }
 }
 
-export default withTracker(() => {
+export default withTracker((props) => {
     let _offersSubscr;
     let _productsSub = Meteor.subscribe("products");
     let _categoriesSub = Meteor.subscribe("categories");
-    let _path = window.location.pathname;
-    if (_path === "/offering") {
-        _offersSubscr = Meteor.subscribe("openOffers", false);
-    } else if (_path === "/looking") {
-        _offersSubscr = Meteor.subscribe("openOffers", true);
+    if (_.has(props, "offering")) {
+        _offersSubscr = Meteor.subscribe("openOffers", !props.offering);
     }
     let _offersReady = _offersSubscr && _offersSubscr.ready();
 
     return {
         currentUser: Meteor.user(),
         offersReady: _offersReady,
-        offers: Offers.find({}).fetch(),
+        offers: OffersCollection.find({}).fetch(),
         products: ProductsCollection.find({}).fetch(),
         categories: CategoriesCollection.find({}).fetch(),
     };

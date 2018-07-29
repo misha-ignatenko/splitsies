@@ -10,7 +10,7 @@ export default class Nav extends React.Component {
             <div>
                 <header>
                     <Row>
-                        <Col sm="8"><img src='images/logo.png' style={{height: 75}}/></Col>
+                        <Col sm="8"><img src='/images/logo.png' style={{height: 75}}/></Col>
                         <Col sm="4"><AccountsUIWrapper /></Col>
                     </Row>
                 </header>

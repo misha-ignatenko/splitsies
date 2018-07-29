@@ -4,6 +4,7 @@ import createBrowserHistory from 'history/createBrowserHistory';
 import Nav from '../../ui/Nav.js';
 import Home from '../../ui/Home.js';
 import Products from '../../ui/Products.js';
+import Offers from '../../ui/Offers.js';
 
 const browserHistory = createBrowserHistory();
 
@@ -14,8 +15,10 @@ export const renderRoutes = () => (
         <Router history={browserHistory}>
             <Switch>
                 <Route exact path="/" component={Home}/>
-                <Route exact path="/offering" component={Products}/>
-                <Route exact path="/looking" component={Products}/>
+                <Route exact path="/offering" component={(props) => <Products history={props.history} offering={true}/>}/>
+                <Route exact path="/looking" component={(props) => <Products history={props.history} offering={false}/>}/>
+                <Route exact path="/offering/offers/:productId" component={(props) => <Offers history={props.history} offering={true} productId={props.match.params.productId}/>}/>
+                <Route exact path="/looking/offers/:productId" component={(props) => <Offers history={props.history} offering={false} productId={props.match.params.productId}/>}/>
                 {/*<Route exact path="/lists/:id" component={ListPageContainer}/>*/}
                 {/*<Route exact path="/signin" component={AuthPageSignIn}/>*/}
                 {/*<Route exact path="/join" component={AuthPageJoin}/>*/}

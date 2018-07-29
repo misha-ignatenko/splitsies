@@ -5,8 +5,6 @@ import { withTracker } from 'meteor/react-meteor-data';
 import { Row, Col, Card, CardTitle, CardText, Button } from 'reactstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
-import { Tasks } from '../api/tasks.js';
-
 import Product from './Product.js';
 
 class Home extends Component {
@@ -58,10 +56,8 @@ class Home extends Component {
 }
 
 export default withTracker(() => {
-    Meteor.subscribe('tasks');
 
     return {
         currentUser: Meteor.user(),
-        products: Tasks.find({}, { sort: { createdAt: -1 } }).fetch(),
     };
 })(Home);

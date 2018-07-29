@@ -4,6 +4,10 @@ import { Card, CardImg, CardText, CardBody, CardTitle, CardSubtitle, Button, Col
 // Task component - represents a single todo item
 export default class Product extends Component {
 
+    productAction() {
+        this.props.history.push((this.props.offering ? '/offering' : "/looking") + "/offers/" + this.props.productData._id);
+    }
+
     render() {
 
         return (
@@ -14,7 +18,7 @@ export default class Product extends Component {
                         <CardTitle>{this.props.productData.name}</CardTitle>
                         <CardText>{this.props.productData.description}</CardText>
                         <CardText>{this.props.openOffersCount} offers</CardText>
-                        <Button>Button</Button>
+                        <Button onClick={this.productAction.bind(this)}>See offers</Button>
                     </CardBody>
                 </Card>
             </Col>
