@@ -94,7 +94,7 @@ class Dashboard extends Component {
                                             let _partnerUser = _.find(this.props.users, function (u) {return u._id === _partnerUserId;});
 
                                             return (<tr key={o._id}>
-                                                <td>{_p && _p.name}</td>
+                                                <td>{(o.offer ? "Your " : "Their ") + (_p && _p.name)}</td>
                                                 <td>{_partnerUser && _partnerUser.username}</td>
                                                 <td>{(o.offer ? "+" : "-") + "$" + o.price}</td>
                                             </tr>);

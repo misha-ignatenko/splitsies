@@ -48,7 +48,7 @@ class Offers extends Component {
                         <CardBody>
                             <CardTitle>{_username}</CardTitle>
                             <CardText>${offer.price}</CardText>
-                            <Button disabled={offer.userId === this.props.currentUser._id} onClick={this.toggle.bind(this, offer._id)}>Connect</Button>
+                            <Button disabled={this.props.currentUser && offer.userId === this.props.currentUser._id} onClick={this.toggle.bind(this, offer._id)}>Connect</Button>
                         </CardBody>
                     </Card>
                 </Col>
