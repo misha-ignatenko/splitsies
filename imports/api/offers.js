@@ -27,7 +27,13 @@ if (Meteor.isServer) {
             return this.ready();
         }
 
-        return Offers.find({userId: this.userId});
+        let _userOffers = Offers.find({userId: this.userId}).fetch();
+        let _userOfferIds = _.pluck(_userOffers, "_id");
+        let _proposedIds = _.pluck(_userOffers, "proposedMatchOfferId");
+        let _finalIds = _.pluck(_userOffers, "finalMatchOfferId");
+        let _allOfferIds = _.union(_userOfferIds, _proposedIds, _finalIds);
+
+        return Offers.find({_id: { $in: _allOfferIds }});
     });
 
 
@@ -88,6 +94,27 @@ if (Meteor.isServer) {
             return {
                 status: _status,
             };
+        },
+        'respond.to.tentative.offer'(offerId, acceptBool) {
+            check(offerId, String);
+            check(acceptBool, Boolean);
+
+            if (!this.userId) {
+                throw new Meteor.Error('not-authorized');
+            }
+
+            // find proposedMatchOfferId
+            let _o1 = Offers.findOne(offerId);
+            let _o2 = Offers.findOne(_o1.proposedMatchOfferId);
+
+            if (!acceptBool) {
+                // if declining offer, clear proposedMatchOfferId of both records
+                Offers.update(_o1._id, { $unset: { proposedMatchOfferId: "" } });
+                Offers.update(_o2._id, { $unset: { proposedMatchOfferId: "" } });
+            } else {
+                Offers.update(_o1._id, { $set: { finalMatchOfferId: _o2._id } });
+                Offers.update(_o2._id, { $set: { finalMatchOfferId: _o1._id } });
+            }
         },
     });
 }
