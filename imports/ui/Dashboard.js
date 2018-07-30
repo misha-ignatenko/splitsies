@@ -27,6 +27,10 @@ class Dashboard extends Component {
         });
     }
 
+    deleteOffer(offerId) {
+        Meteor.call("delete.offer", offerId);
+    }
+
     openAndPendingOffersSummary(key) {
         let _offers = this.props[key];
 
@@ -39,7 +43,7 @@ class Dashboard extends Component {
 
                     return (<tr key={o._id}>
                         <td>{(o.offer ? "Your " : "Someone's ") + (_p && _p.name) + " for $" + o.price}</td>
-                        <td>{o.proposedMatchOfferId ? (o.lastActionUserId === o.userId ? "Waiting for response" : <Button onClick={this.toggle.bind(this, o._id)}>Respond to offer</Button>) : "No offers"}</td>
+                        <td>{o.proposedMatchOfferId ? (o.lastActionUserId === o.userId ? "Waiting for response" : <Button onClick={this.toggle.bind(this, o._id)}>Respond to offer</Button>) : <span>No offers <Button onClick={this.deleteOffer.bind(this, o._id)} color="danger">Delete request</Button></span>}</td>
                     </tr>);
                 })}
             </tbody>
@@ -49,7 +53,6 @@ class Dashboard extends Component {
     dashboardAction(acceptBool) {
         let _that = this;
         Meteor.call("respond.to.tentative.offer", this.state.selectedOfferId, acceptBool, function (err, res) {
-            console.log(err, res);
             if (!err) {
                 _that.toggle();
             };
@@ -57,7 +60,6 @@ class Dashboard extends Component {
     }
 
     render() {
-        console.log("rendering");
         return (
             <div>
                 <Row>
@@ -94,7 +96,6 @@ class Dashboard extends Component {
                                             let _partner = _.find(this.props.allOffers, function (ofr) {return ofr._id === o.finalMatchOfferId;});
                                             let _partnerUserId = _partner && _partner.userId;
                                             let _partnerUser = _partnerUserId && _.find(this.props.users, function (u) {return u._id === _partnerUserId;});
-                                            console.log(o, _p, _partner, _partnerUserId, _partnerUser);
 
                                             return (<tr key={o._id}>
                                                 <td>{(o.offer ? "Your " : ((_partnerUser && _partnerUser.username) + "'s ")) + (_p && _p.name) + (o.offer ? " with " + (_partnerUser && _partnerUser.username) : "")}</td>
