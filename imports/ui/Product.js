@@ -8,6 +8,10 @@ export default class Product extends Component {
         this.props.history.push((this.props.offering ? '/offering' : "/looking") + "/offers/" + this.props.productData._id);
     }
 
+    newOffer() {
+        this.props.history.push((this.props.offering ? '/offering' : "/looking") + "/new/" + this.props.productData._id);
+    }
+
     render() {
 
         return (
@@ -17,8 +21,9 @@ export default class Product extends Component {
                     <CardBody>
                         <CardTitle>{this.props.productData.name}</CardTitle>
                         <CardText>{this.props.productData.description}</CardText>
-                        <CardText>{this.props.openOffersCount} offers</CardText>
-                        <Button onClick={this.productAction.bind(this)}>See offers</Button>
+                        <Button onClick={this.productAction.bind(this)}>{this.props.openOffersCount} requests</Button>
+                        {' '}
+                        <Button onClick={this.newOffer.bind(this)}>Post your offer</Button>
                     </CardBody>
                 </Card>
             </Col>
