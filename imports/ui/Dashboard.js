@@ -38,7 +38,7 @@ class Dashboard extends Component {
                     });
 
                     return (<tr key={o._id}>
-                        <td>{_p && _p.name}</td>
+                        <td>{(o.offer ? "Your " : "Someone's ") + (_p && _p.name) + " for $" + o.price}</td>
                         <td>{o.proposedMatchOfferId ? (o.lastActionUserId === o.userId ? "Waiting for response" : <Button onClick={this.toggle.bind(this, o._id)}>Respond to offer</Button>) : "No offers"}</td>
                     </tr>);
                 })}
@@ -57,6 +57,7 @@ class Dashboard extends Component {
     }
 
     render() {
+        console.log("rendering");
         return (
             <div>
                 <Row>
@@ -90,12 +91,13 @@ class Dashboard extends Component {
                                     <tbody>
                                         {this.props.splittingOffers.map((o) => {
                                             let _p = _.find(this.props.products, function (p) {return p._id === o.productId;});
-                                            let _partnerUserId = _.find(this.props.allOffers, function (ofr) {return ofr._id === o.finalMatchOfferId;}).userId;
-                                            let _partnerUser = _.find(this.props.users, function (u) {return u._id === _partnerUserId;});
+                                            let _partner = _.find(this.props.allOffers, function (ofr) {return ofr._id === o.finalMatchOfferId;});
+                                            let _partnerUserId = _partner && _partner.userId;
+                                            let _partnerUser = _partnerUserId && _.find(this.props.users, function (u) {return u._id === _partnerUserId;});
+                                            console.log(o, _p, _partner, _partnerUserId, _partnerUser);
 
                                             return (<tr key={o._id}>
-                                                <td>{(o.offer ? "Your " : "Their ") + (_p && _p.name)}</td>
-                                                <td>{_partnerUser && _partnerUser.username}</td>
+                                                <td>{(o.offer ? "Your " : ((_partnerUser && _partnerUser.username) + "'s ")) + (_p && _p.name) + (o.offer ? " with " + (_partnerUser && _partnerUser.username) : "")}</td>
                                                 <td>{(o.offer ? "+" : "-") + "$" + o.price}</td>
                                             </tr>);
                                         })}
@@ -124,7 +126,19 @@ class Dashboard extends Component {
 
 export default withTracker((props) => {
     let _offersSub = Meteor.subscribe("userOffers");
-    let _offers = _offersSub.ready() && OffersCollection.find({userId: Meteor.userId()}).fetch() || [];
+    let _allOffers = OffersCollection.find({}).fetch();
+    let _offers = _.filter(_allOffers, function (o) { return o.userId === Meteor.userId(); });
+
+
+    let _userSpecificOffers = _offers;
+    let _userSpecificOfferIds = _.pluck(_userSpecificOffers, "_id");
+    let _proposedIds = _.pluck(_userSpecificOffers, "proposedMatchOfferId");
+    let _finalIds = _.pluck(_userSpecificOffers, "finalMatchOfferId");
+    let _allOfferIds = _.union(_userSpecificOfferIds, _proposedIds, _finalIds);
+    let _allOffersSub = _allOfferIds.length > 0 && Meteor.subscribe("offersByIds", _allOfferIds);
+
+
+
     let _productsSub = _offers.length > 0 && Meteor.subscribe("products", _.pluck(_offers, "productId"));
     let _products = _productsSub && _productsSub.ready() && ProductsCollection.find({}).fetch() || [];
     let _lookingForOffers = _.filter(_offers, function (o) {
@@ -136,7 +150,6 @@ export default withTracker((props) => {
     let _splittingOffers = _.filter(_offers, function (o) {
         return o.finalMatchOfferId;
     });
-    let _allOffers = OffersCollection.find().fetch();
     let _usersSub = _allOffers.length > 0 && Meteor.subscribe("users", _.pluck(_allOffers, "userId"));
 
     return {
@@ -146,6 +159,6 @@ export default withTracker((props) => {
         offeringOffers: _offeringOffers,
         splittingOffers: _splittingOffers,
         products: _products,
-        users: _usersSub && _usersSub.ready() && Users.find({}).fetch(),
+        users: Users.find({}).fetch(),
     };
 })(Dashboard);

@@ -33,7 +33,17 @@ if (Meteor.isServer) {
         let _finalIds = _.pluck(_userOffers, "finalMatchOfferId");
         let _allOfferIds = _.union(_userOfferIds, _proposedIds, _finalIds);
 
-        return Offers.find({_id: { $in: _allOfferIds }});
+        return Offers.find({userId: this.userId});
+    });
+
+    Meteor.publish("offersByIds", function offersByIds(offerIds) {
+        if (!this.userId) {
+            return this.ready();
+        }
+
+        check(offerIds, Array);
+        
+        return Offers.find({_id: { $in: offerIds } });
     });
 
 
