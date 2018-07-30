@@ -88,8 +88,8 @@ if (Meteor.isServer) {
             }
 
             // link the two offers
-            Offers.update(_openOfferFromRecipientId, { $set: { proposedMatchOfferId: _offer._id, price: _offer.price } });
-            Offers.update(_offer._id, { $set: { proposedMatchOfferId: _openOfferFromRecipientId } });
+            Offers.update(_openOfferFromRecipientId, { $set: { proposedMatchOfferId: _offer._id, price: _offer.price, lastActionUserId: this.userId } });
+            Offers.update(_offer._id, { $set: { proposedMatchOfferId: _openOfferFromRecipientId, lastActionUserId: this.userId } });
 
             return {
                 status: _status,
@@ -109,11 +109,11 @@ if (Meteor.isServer) {
 
             if (!acceptBool) {
                 // if declining offer, clear proposedMatchOfferId of both records
-                Offers.update(_o1._id, { $unset: { proposedMatchOfferId: "" } });
-                Offers.update(_o2._id, { $unset: { proposedMatchOfferId: "" } });
+                Offers.update(_o1._id, { $unset: { proposedMatchOfferId: "", lastActionUserId: "" } });
+                Offers.update(_o2._id, { $unset: { proposedMatchOfferId: "", lastActionUserId: "" } });
             } else {
-                Offers.update(_o1._id, { $set: { finalMatchOfferId: _o2._id } });
-                Offers.update(_o2._id, { $set: { finalMatchOfferId: _o1._id } });
+                Offers.update(_o1._id, { $set: { finalMatchOfferId: _o2._id, lastActionUserId: this.userId } });
+                Offers.update(_o2._id, { $set: { finalMatchOfferId: _o1._id, price: _o1.price, lastActionUserId: this.userId } });
             }
         },
     });

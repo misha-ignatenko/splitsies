@@ -17,7 +17,7 @@ export default class Product extends Component {
         return (
             <Col sm="4">
                 <Card>
-                    <CardImg top width="100%" src="https://placeholdit.imgix.net/~text?txtsize=33&txt=318%C3%97180&w=318&h=180" alt="Card image cap" />
+                    <CardImg top width="100%" src={this.props.productData.logoUrl || "https://placeholdit.imgix.net/~text?txtsize=33&txt=318%C3%97180&w=318&h=180"} alt="Card image cap" />
                     <CardBody>
                         <CardTitle>{this.props.productData.name}</CardTitle>
                         <CardText>{this.props.productData.description}</CardText>

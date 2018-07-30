@@ -29,7 +29,6 @@ class NewOffer extends Component {
     }
 
     render() {
-        console.log(this.props.offers);
         return (
             <div>
                 <h3>{this.props.product.name}</h3>

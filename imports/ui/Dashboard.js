@@ -39,7 +39,7 @@ class Dashboard extends Component {
 
                     return (<tr key={o._id}>
                         <td>{_p && _p.name}</td>
-                        <td>{o.proposedMatchOfferId ? <Button onClick={this.toggle.bind(this, o._id)}>Respond to offer</Button> : "No offers"}</td>
+                        <td>{o.proposedMatchOfferId ? (o.lastActionUserId === o.userId ? "Waiting for response" : <Button onClick={this.toggle.bind(this, o._id)}>Respond to offer</Button>) : "No offers"}</td>
                     </tr>);
                 })}
             </tbody>

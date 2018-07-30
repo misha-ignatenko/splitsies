@@ -22,6 +22,7 @@ export const renderRoutes = () => (
                 <Route exact path="/offering/offers/:productId" component={(props) => <Offers history={props.history} offering={true} productId={props.match.params.productId}/>}/>
                 <Route exact path="/offering/new/:productId" component={(props) => <NewOffer history={props.history} offering={true} productId={props.match.params.productId}/>}/>
                 <Route exact path="/looking/offers/:productId" component={(props) => <Offers history={props.history} offering={false} productId={props.match.params.productId}/>}/>
+                <Route exact path="/looking/new/:productId" component={(props) => <NewOffer history={props.history} offering={false} productId={props.match.params.productId}/>}/>
                 {/*<Route exact path="/lists/:id" component={ListPageContainer}/>*/}
                 <Route exact path="/dashboard" component={Dashboard}/>
                 {/*<Route exact path="/join" component={AuthPageJoin}/>*/}
