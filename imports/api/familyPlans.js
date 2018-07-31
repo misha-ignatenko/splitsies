@@ -25,6 +25,14 @@ if (Meteor.isServer) {
         }
     });
 
+    Meteor.publish("yourFamilyPlanMemberships", function yourFamilyPlanMemberships() {
+        if (!this.userId) {
+            return this.ready();
+        }
+
+        return FamilyPlanParticipants.find({userId: this.userId});
+    });
+
     Meteor.methods({
         'create.new.offer'(productId, offeringBool, price, capacity, notes) {
             check(productId, String);
@@ -118,6 +126,30 @@ if (Meteor.isServer) {
                 // this means you are joining someone else's existing, open family plan
                 let _familyPlan = FamilyPlans.findOne(id);
                 console.log("you are joining this family plan: ", _familyPlan);
+
+                // check if you have any open offers (status "new")
+                let _yourOpenOffer = FamilyPlanParticipants.findOne({
+                    userId: this.userId,
+                    productId: _familyPlan.productId,
+                    status: "new",
+                });
+
+                console.log("you are already looking to join someone: ", _yourOpenOffer);
+
+                if (!_yourOpenOffer) {
+                    FamilyPlanParticipants.insert({
+                        userId: this.userId,
+                        familyPlanId: _familyPlan._id,
+                        status: "pending",
+                        productId: _familyPlan.productId,
+                        lastActionByUserId: this.userId,
+                    });
+                } else {
+                    FamilyPlanParticipants.update(_yourOpenOffer._id, { $set: { familyPlanId: _familyPlan._id, status: "pending", lastActionByUserId: this.userId, } });
+                }
+
+                // increment members by 1
+                FamilyPlans.update(_familyPlan._id, { $inc: { members: 1 } });
             }
         },
     })

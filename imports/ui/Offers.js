@@ -76,7 +76,6 @@ class Offers extends Component {
     }
 
     render() {
-        console.log("counter offers: ", this.props.counterOffers);
         return (
             <div>
                 <Row>
