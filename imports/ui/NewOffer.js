@@ -4,7 +4,6 @@ import { withTracker } from 'meteor/react-meteor-data';
 import { Form, FormGroup, InputGroup, InputGroupAddon, Input, Button, Label } from 'reactstrap';
 
 import { Products as ProductsCollection } from '../api/products.js';
-import { Offers as OffersCollection } from '../api/offers.js';
 import { FamilyPlans, FamilyPlanParticipants } from '../api/familyPlans.js';
 
 class NewOffer extends Component {
@@ -17,8 +16,6 @@ class NewOffer extends Component {
     }
 
     submitOffer() {
-        console.log(this.state);
-        console.log(this.props);
         Meteor.call("create.new.offer", this.props.product._id, this.props.offering, this.state.price, this.state.capacity, this.state.notes, function (err, res) {
             console.log(err, res);
         });
@@ -28,7 +25,6 @@ class NewOffer extends Component {
         event.preventDefault();
         let _st = {};
         _st[type] = _.contains(["price", "capacity"], type) ? parseFloat(event.target.value) : event.target.value;
-        console.log(_st);
         this.setState(_st);
     }
 
@@ -53,10 +49,7 @@ class NewOffer extends Component {
                         <Label for="exampleText">Other notes</Label>
                         <Input type="textarea" name="text" id="exampleText" onChange={this.changeInput.bind(this, "notes")}/>
                     </FormGroup>
-                    {this.props.offers && this.props.offers.length === 0 ?
-                        <Button onClick={this.submitOffer.bind(this)}>Submit</Button> :
-                        <h3>You already have an open offer for this product.</h3>
-                    }
+                    <Button onClick={this.submitOffer.bind(this)}>Submit</Button>
                 </Form>
                 <br/>
             </div>
@@ -68,11 +61,9 @@ export default withTracker((props) => {
     let _productsSub = Meteor.subscribe("products", [props.productId]);
     let _product = _productsSub.ready() && ProductsCollection.findOne();
     let _offersSub = Meteor.subscribe("openOffers", props.offering, [props.productId]);
-    let _offers = _offersSub.ready() && OffersCollection.find({userId: Meteor.userId()}).fetch();
 
     return {
         currentUser: Meteor.user(),
         product: _product,
-        offers: _offers,
     };
 })(NewOffer);

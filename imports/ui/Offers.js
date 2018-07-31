@@ -121,7 +121,6 @@ export default withTracker((props) => {
     if (!props.offering) {
         let _yourMembershipsSub = Meteor.subscribe("yourFamilyPlanMemberships");
         _plansYoureIn = _.pluck(FamilyPlanParticipants.find({userId: Meteor.userId(), status: {$ne: "new"}}).fetch(), "familyPlanId");
-        console.log(_plansYoureIn);
     }
     let _offersSub = Meteor.subscribe("openOffers", !props.offering, [props.productId]);
     let _counterOffersSub = Meteor.subscribe("openOffers", props.offering, [props.productId]);

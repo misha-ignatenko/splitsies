@@ -11,7 +11,6 @@ if (Meteor.isServer) {
         check(productIds, Array);
 
         if (offeringBool) {
-            console.log("here");
             return FamilyPlans.find({
                 $where: function() { return this.members < this.capacity },
                 productId: { $in: productIds },
@@ -73,7 +72,6 @@ if (Meteor.isServer) {
                 throw new Meteor.Error('not-authorized');
             }
 
-            console.log(productId, offeringBool, price, capacity, notes);
             if (offeringBool) {
                 // create a FamilyPlans and FamilyPlanParticipants objects for the user
                 let _familyPlanId = FamilyPlans.insert({

@@ -3,7 +3,6 @@ import { Meteor } from 'meteor/meteor';
 import { withTracker } from 'meteor/react-meteor-data';
 import { Row, Col, Card, Table, CardHeader, CardBody, Button, Modal, ModalHeader, ModalBody, ModalFooter } from 'reactstrap';
 
-import { Offers as OffersCollection } from '../api/offers.js';
 import { Products as ProductsCollection } from '../api/products.js';
 import { Categories as CategoriesCollection } from '../api/categories.js';
 import { FamilyPlans, FamilyPlanParticipants } from '../api/familyPlans.js';
@@ -169,16 +168,11 @@ export default withTracker((props) => {
 
 
     // let _offersSub = Meteor.subscribe("userOffers");
-    let _allOffers = OffersCollection.find({}).fetch();
-    let _offers = _.filter(_allOffers, function (o) { return o.userId === Meteor.userId(); });
 
 
 
     let _productsSub = Meteor.subscribe("products");
     let _products = ProductsCollection.find({}).fetch();
-    let _splittingOffers = _.filter(_offers, function (o) {
-        return o.finalMatchOfferId;
-    });
     let _usersSub = Meteor.subscribe("users", _.union(_.pluck(_membersOfMyPlans, "userId"), _userIdsOfPeopleIAmSplittingPlansWith));
 
     return {

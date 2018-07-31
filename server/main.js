@@ -1,6 +1,5 @@
 import { Meteor } from 'meteor/meteor';
 import '../imports/api/tasks.js';
-import '../imports/api/offers.js';
 import '../imports/api/products.js';
 import '../imports/api/categories.js';
 import '../imports/api/users.js';
