@@ -26,7 +26,7 @@ class Home extends Component {
     }
 
     homeAction(offeringBool) {
-        this.props.history.push(offeringBool ? '/offering' : "/looking");
+        this.props.history.push(offeringBool ? '/offerYours' : "/joinTheirs");
     }
 
     render() {
