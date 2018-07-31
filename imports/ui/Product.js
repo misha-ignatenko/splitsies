@@ -21,7 +21,7 @@ export default class Product extends Component {
                     <CardBody>
                         <CardTitle>{this.props.productData.name}</CardTitle>
                         <CardText>{this.props.productData.description}</CardText>
-                        <Button onClick={this.productAction.bind(this)}>{this.props.openOffersCount} requests</Button>
+                        <Button onClick={this.productAction.bind(this)}>See offers</Button>
                         {' '}
                         <Button onClick={this.newOffer.bind(this)}>Post your offer</Button>
                     </CardBody>

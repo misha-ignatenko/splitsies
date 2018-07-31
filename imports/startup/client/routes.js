@@ -7,6 +7,8 @@ import Products from '../../ui/Products.js';
 import Offers from '../../ui/Offers.js';
 import NewOffer from '../../ui/NewOffer.js';
 import Dashboard from '../../ui/Dashboard.js';
+import JoinTheirs from '../../ui/JoinTheirs.js';
+import OfferYours from '../../ui/OfferYours.js';
 
 const browserHistory = createBrowserHistory();
 

@@ -3,7 +3,6 @@ import { Meteor } from 'meteor/meteor';
 import { withTracker } from 'meteor/react-meteor-data';
 import { Row, Col } from 'reactstrap';
 
-import { Offers as OffersCollection } from '../api/offers.js';
 import { Products as ProductsCollection } from '../api/products.js';
 import { Categories as CategoriesCollection } from '../api/categories.js';
 
@@ -72,7 +71,6 @@ export default withTracker((props) => {
     return {
         currentUser: Meteor.user(),
         offersReady: _offersReady,
-        offers: OffersCollection.find({}).fetch(),
         products: ProductsCollection.find({}).fetch(),
         categories: CategoriesCollection.find({}).fetch(),
     };

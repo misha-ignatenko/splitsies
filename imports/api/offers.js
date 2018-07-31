@@ -5,22 +5,22 @@ import { check, Match } from 'meteor/check';
 export const Offers = new Mongo.Collection('offers');
 
 if (Meteor.isServer) {
-    Meteor.publish('openOffers', function tasksPublication(offeringBool, optionalProductId) {
-        check(offeringBool, Boolean);
-        check(optionalProductId, Match.OneOf(Array, undefined));
-
-        let _qry = {
-            offer: offeringBool,
-            proposedMatchOfferId: {$exists: false},
-            finalMatchOfferId: {$exists: false},
-        };
-
-        if (!_.isUndefined(optionalProductId)) {
-            _qry.productId = {$in: optionalProductId};
-        }
-
-        return Offers.find(_qry);
-    });
+    // Meteor.publish('openOffers', function tasksPublication(offeringBool, optionalProductId) {
+    //     check(offeringBool, Boolean);
+    //     check(optionalProductId, Match.OneOf(Array, undefined));
+    //
+    //     let _qry = {
+    //         offer: offeringBool,
+    //         proposedMatchOfferId: {$exists: false},
+    //         finalMatchOfferId: {$exists: false},
+    //     };
+    //
+    //     if (!_.isUndefined(optionalProductId)) {
+    //         _qry.productId = {$in: optionalProductId};
+    //     }
+    //
+    //     return Offers.find(_qry);
+    // });
 
     Meteor.publish("userOffers", function userOffers() {
         if (!this.userId) {
@@ -48,24 +48,24 @@ if (Meteor.isServer) {
 
 
     Meteor.methods({
-        'create.new.offer'(productId, offeringBool, price, notes) {
-            check(productId, String);
-            check(offeringBool, Boolean);
-            check(price, Number);
-            check(notes, String);
-
-            if (!this.userId) {
-                throw new Meteor.Error('not-authorized');
-            }
-
-            Offers.insert({
-                userId: this.userId,
-                offer: offeringBool,
-                productId: productId,
-                price: price,
-                notes: notes,
-            });
-        },
+        // 'create.new.offer'(productId, offeringBool, price, notes) {
+        //     check(productId, String);
+        //     check(offeringBool, Boolean);
+        //     check(price, Number);
+        //     check(notes, String);
+        //
+        //     if (!this.userId) {
+        //         throw new Meteor.Error('not-authorized');
+        //     }
+        //
+        //     Offers.insert({
+        //         userId: this.userId,
+        //         offer: offeringBool,
+        //         productId: productId,
+        //         price: price,
+        //         notes: notes,
+        //     });
+        // },
         'delete.offer'(offerId) {
             check(offerId, String);
 

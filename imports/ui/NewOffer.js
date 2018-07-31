@@ -5,18 +5,21 @@ import { Form, FormGroup, InputGroup, InputGroupAddon, Input, Button, Label } fr
 
 import { Products as ProductsCollection } from '../api/products.js';
 import { Offers as OffersCollection } from '../api/offers.js';
+import { FamilyPlans, FamilyPlanParticipants } from '../api/familyPlans.js';
 
 class NewOffer extends Component {
     constructor(props) {
         super(props);
 
-        this.state = {};
+        this.state = {
+            capacity: 1,
+        };
     }
 
     submitOffer() {
         console.log(this.state);
         console.log(this.props);
-        Meteor.call("create.new.offer", this.props.product._id, this.props.offering, parseFloat(this.state.price), this.state.notes, function (err, res) {
+        Meteor.call("create.new.offer", this.props.product._id, this.props.offering, this.state.price, this.state.capacity, this.state.notes, function (err, res) {
             console.log(err, res);
         });
     }
@@ -24,13 +27,15 @@ class NewOffer extends Component {
     changeInput(type, event) {
         event.preventDefault();
         let _st = {};
-        _st[type] = event.target.value;
+        _st[type] = _.contains(["price", "capacity"], type) ? parseFloat(event.target.value) : event.target.value;
+        console.log(_st);
         this.setState(_st);
     }
 
     render() {
         return (
             <div>
+                <h3>{this.props.offering ? "Share your family plan with others." : "Join someone's family plan."}</h3>
                 <h3>{this.props.product.name}</h3>
                 <Form>
                     <FormGroup>
@@ -39,6 +44,11 @@ class NewOffer extends Component {
                             <Input placeholder="Price" type="number" step="0.01" onChange={this.changeInput.bind(this, "price")}/>
                         </InputGroup>
                     </FormGroup>
+                    {this.props.offering && <FormGroup>
+                        <InputGroup>
+                            <Input placeholder="Capacity" type="number" step="1" onChange={this.changeInput.bind(this, "capacity")}/>
+                        </InputGroup>
+                    </FormGroup>}
                     <FormGroup>
                         <Label for="exampleText">Other notes</Label>
                         <Input type="textarea" name="text" id="exampleText" onChange={this.changeInput.bind(this, "notes")}/>
