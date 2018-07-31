@@ -117,15 +117,23 @@ class Offers extends Component {
 }
 
 export default withTracker((props) => {
+    let _plansYoureIn = [];
+    if (!props.offering) {
+        let _yourMembershipsSub = Meteor.subscribe("yourFamilyPlanMemberships");
+        _plansYoureIn = _.pluck(FamilyPlanParticipants.find({userId: Meteor.userId(), status: {$ne: "new"}}).fetch(), "familyPlanId");
+        console.log(_plansYoureIn);
+    }
     let _offersSub = Meteor.subscribe("openOffers", !props.offering, [props.productId]);
     let _counterOffersSub = Meteor.subscribe("openOffers", props.offering, [props.productId]);
     let _productsSub = Meteor.subscribe("products", [props.productId]);
     let _product = _productsSub.ready() && ProductsCollection.findOne();
-    let _offers = props.offering ? FamilyPlanParticipants.find({}).fetch() : FamilyPlans.find({}).fetch();
-    let _counterOffers = !props.offering ? FamilyPlanParticipants.find({}).fetch() : FamilyPlans.find({}).fetch();
+    let _qry = {status: "new", productId: props.productId};
+    let _offers = props.offering ? FamilyPlanParticipants.find(_qry).fetch() : FamilyPlans.find({_id: {$nin: _plansYoureIn}}).fetch();
+    let _counterOffers = !props.offering ? FamilyPlanParticipants.find(_qry).fetch() : FamilyPlans.find({}).fetch();
     let _usersSub = _offers && Meteor.subscribe("users", _.pluck(_offers, "userId"));
 
     return {
+        plansYoureIn: _plansYoureIn,
         currentUser: Meteor.user(),
         offers: _offers,
         renderInputForm: props.offering && _.filter(_counterOffers, function (co) { return co.userId === Meteor.userId(); }).length === 0,

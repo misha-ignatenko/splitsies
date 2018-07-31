@@ -7,8 +7,6 @@ import Products from '../../ui/Products.js';
 import Offers from '../../ui/Offers.js';
 import NewOffer from '../../ui/NewOffer.js';
 import Dashboard from '../../ui/Dashboard.js';
-import JoinTheirs from '../../ui/JoinTheirs.js';
-import OfferYours from '../../ui/OfferYours.js';
 
 const browserHistory = createBrowserHistory();
 
@@ -19,8 +17,6 @@ export const renderRoutes = () => (
         <Router history={browserHistory}>
             <Switch>
                 <Route exact path="/" component={Home}/>
-                <Route exact path="/offerYours" component={(props) => <OfferYours history={props.history} />}/>
-                <Route exact path="/joinTheirs" component={(props) => <JoinTheirs history={props.history} />}/>
                 <Route exact path="/offering" component={(props) => <Products history={props.history} offering={true}/>}/>
                 <Route exact path="/looking" component={(props) => <Products history={props.history} offering={false}/>}/>
                 <Route exact path="/offering/offers/:productId" component={(props) => <Offers history={props.history} offering={true} productId={props.match.params.productId}/>}/>

@@ -26,7 +26,7 @@ class Home extends Component {
     }
 
     homeAction(offeringBool) {
-        this.props.history.push(offeringBool ? '/offerYours' : "/joinTheirs");
+        this.props.history.push(offeringBool ? '/offering' : "/looking");
     }
 
     render() {
@@ -37,14 +37,14 @@ class Home extends Component {
                     <Col sm="6">
                         <Card body>
                             <CardTitle>Looking to split (share theirs)</CardTitle>
-                            <CardText>You would like to pay someone for sharing their subscription with you.</CardText>
+                            <CardText>You would like to pay someone for sharing their subscription with you (join theirs).</CardText>
                             <Button onClick={this.homeAction.bind(this, false)}>Go</Button>
                         </Card>
                     </Col>
                     <Col sm="6">
                         <Card body>
                             <CardTitle>Offering to split (share yours)</CardTitle>
-                            <CardText>You would like to get paid for sharing your subscription with someone.</CardText>
+                            <CardText>You would like to get paid for sharing your subscription with someone (offer yours).</CardText>
                             <Button onClick={this.homeAction.bind(this, true)}>Go</Button>
                         </Card>
                     </Col>
