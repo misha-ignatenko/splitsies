@@ -24,7 +24,7 @@ class NewOffer extends Component {
     changeInput(type, event) {
         event.preventDefault();
         let _st = {};
-        _st[type] = event.target.value;
+        _st[type] = _.contains(["price", "capacity"], type) ? parseFloat(event.target.value) : event.target.value;
         this.setState(_st);
     }
 
@@ -36,9 +36,11 @@ class NewOffer extends Component {
                     <FormGroup>
                         <InputGroup>
                             <InputGroupAddon addonType="prepend">$</InputGroupAddon>
-                            <Input placeholder="Price" type="number" step="0.01" onChange={this.changeInput.bind(this, "price")}/>
+                            <Input placeholder="Total cost of plan" type="number" step="0.01" onChange={this.changeInput.bind(this, "price")}/>
+                            <Input placeholder="Max capacity (# of people) in plan" type="number" step="1" onChange={this.changeInput.bind(this, "capacity")}/>
                         </InputGroup>
                     </FormGroup>
+                    ${this.state.price && this.state.capacity && (this.state.price / this.state.capacity).toFixed(2)} per person
                     <FormGroup>
                         <Label for="exampleText">Other notes</Label>
                         <Input type="textarea" name="text" id="exampleText" onChange={this.changeInput.bind(this, "notes")}/>

@@ -22,7 +22,7 @@ class Offers extends Component {
 
     offerAction() {
         let _that = this;
-        Meteor.call('accept.offer.tentative', this.state.selectedOfferId, function (err, res) {
+        Meteor.call('accept.offer.tentatively', this.state.selectedOfferId, function (err, res) {
             console.log(err, res);
             if (!err && res) {
                 _that.toggle();

@@ -78,7 +78,35 @@ class Dashboard extends Component {
                         <Card>
                             <CardHeader>Offering...</CardHeader>
                             <CardBody>
-                                {this.openAndPendingOffersSummary("offeringOffers")}
+                                <Table bordered>
+                                    <tbody>
+                                        {this.props.offeringOffers.map((o) => {
+                                            let _p = _.find(this.props.products, function (p) {
+                                                return p._id === o.productId;
+                                            });
+
+                                            let _linkedOpenOffers = _.filter(this.props.allOffers, function (ofr) {
+                                                return ofr.proposedMatchOfferId === o._id && !ofr.finalMatchOfferId && ofr._id !== o._id;
+                                            });
+
+                                            let _linkedClosedOffers = _.filter(this.props.allOffers, function (ofr) {
+                                                return ofr.finalMatchOfferId === o._id && ofr._id !== o._id;
+                                            });
+                                            console.log("_linkedClosedOffers: ", _linkedClosedOffers);
+
+                                            return _linkedOpenOffers.length > 0 ? _linkedOpenOffers.map((off) => {
+
+                                                return (<tr key={off._id}>
+                                                    <td>Your {_p && _p.name}</td>
+                                                    <td><Button onClick={this.toggle.bind(this, off._id)}>Respond to offer</Button></td>
+                                                </tr>);
+                                            }): <tr key={o._id}>
+                                                    <td>Your {_p && _p.name}</td>
+                                                    <td>No offers</td>
+                                                </tr>;
+                                        })}
+                                    </tbody>
+                                </Table>
                             </CardBody>
                         </Card>
                     </Col>
@@ -136,7 +164,7 @@ export default withTracker((props) => {
     let _proposedIds = _.pluck(_userSpecificOffers, "proposedMatchOfferId");
     let _finalIds = _.pluck(_userSpecificOffers, "finalMatchOfferId");
     let _allOfferIds = _.union(_userSpecificOfferIds, _proposedIds, _finalIds);
-    let _allOffersSub = _allOfferIds.length > 0 && Meteor.subscribe("offersByIds", _allOfferIds);
+    let _allOffersSub = _allOfferIds.length > 0 && Meteor.subscribe("offersExpand", _allOfferIds);
 
 
 
@@ -145,9 +173,7 @@ export default withTracker((props) => {
     let _lookingForOffers = _.filter(_offers, function (o) {
         return !o.offer && !o.finalMatchOfferId;
     });
-    let _offeringOffers = _.filter(_offers, function (o) {
-        return o.offer && !o.finalMatchOfferId;
-    });
+    let _offeringOffers = _.filter(_offers, function (o) {return o.offer;});
     let _splittingOffers = _.filter(_offers, function (o) {
         return o.finalMatchOfferId;
     });

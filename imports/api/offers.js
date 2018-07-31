@@ -26,14 +26,26 @@ if (Meteor.isServer) {
         if (!this.userId) {
             return this.ready();
         }
-
-        let _userOffers = Offers.find({userId: this.userId}).fetch();
-        let _userOfferIds = _.pluck(_userOffers, "_id");
-        let _proposedIds = _.pluck(_userOffers, "proposedMatchOfferId");
-        let _finalIds = _.pluck(_userOffers, "finalMatchOfferId");
-        let _allOfferIds = _.union(_userOfferIds, _proposedIds, _finalIds);
+        console.log("userOffers");
 
         return Offers.find({userId: this.userId});
+    });
+
+    Meteor.publish("offersExpand", function offersExpand(offerIds) {
+        if (!this.userId) {
+            return this.ready();
+        }
+
+        check(offerIds, Array);
+        console.log("offersExpand");
+
+        return Offers.find({
+            $or: [
+                { _id: { $in: offerIds } },
+                { proposedMatchOfferId: { $in: offerIds } },
+                { finalMatchOfferId: { $in: offerIds } },
+            ],
+        });
     });
 
     Meteor.publish("offersByIds", function offersByIds(offerIds) {
@@ -81,7 +93,7 @@ if (Meteor.isServer) {
                 throw new Meteor.Error("Cannot delete offer because it's either pending or final");
             }
         },
-        'accept.offer.tentative'(offerId) {
+        'accept.offer.tentatively'(offerId) {
             check(offerId, String);
 
             // Make sure the user is logged in before inserting a task
@@ -112,9 +124,12 @@ if (Meteor.isServer) {
                 });
             }
 
+            let _offerTrueId = _offer.offer ? _offer._id : _openOfferFromRecipientId;
+            let _offerFalseId = !_offer.offer ? _offer._id : _openOfferFromRecipientId;
+
             // link the two offers
-            Offers.update(_openOfferFromRecipientId, { $set: { proposedMatchOfferId: _offer._id, price: _offer.price, lastActionUserId: this.userId } });
-            Offers.update(_offer._id, { $set: { proposedMatchOfferId: _openOfferFromRecipientId, lastActionUserId: this.userId } });
+            Offers.update(_offerTrueId, { $set: { lastActionUserId: this.userId } });
+            Offers.update(_offerFalseId, { $set: { proposedMatchOfferId: _offerTrueId, lastActionUserId: this.userId } });
 
             return {
                 status: _status,
@@ -132,13 +147,15 @@ if (Meteor.isServer) {
             let _o1 = Offers.findOne(offerId);
             let _o2 = Offers.findOne(_o1.proposedMatchOfferId);
 
+            let _offerTrueId = _o1.offer ? _o1._id : _o2._id;
+            let _offerFalseId = !_o1.offer ? _o1._id : _o2._id;
+
             if (!acceptBool) {
                 // if declining offer, clear proposedMatchOfferId of both records
-                Offers.update(_o1._id, { $unset: { proposedMatchOfferId: "", lastActionUserId: "" } });
-                Offers.update(_o2._id, { $unset: { proposedMatchOfferId: "", lastActionUserId: "" } });
+                Offers.update(_offerTrueId, { $unset: { proposedMatchOfferId: "", lastActionUserId: "" } });
+                Offers.update(_offerFalseId, { $unset: { proposedMatchOfferId: "", lastActionUserId: "" } });
             } else {
-                Offers.update(_o1._id, { $set: { finalMatchOfferId: _o2._id, lastActionUserId: this.userId } });
-                Offers.update(_o2._id, { $set: { finalMatchOfferId: _o1._id, price: _o1.price, lastActionUserId: this.userId } });
+                Offers.update(_offerFalseId, { $set: { finalMatchOfferId: _offerTrueId, lastActionUserId: this.userId } });
             }
         },
     });
