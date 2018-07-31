@@ -77,7 +77,7 @@ class Dashboard extends Component {
                                     let _p = _.find(this.props.products, function (p) {
                                         return p._id === o.productId;
                                     });
-                                    let _members = _.filter(this.props.membersOfMyPlans, function (m) {return m.familyPlanId === o._id && m.userId !== Meteor.userId();});
+                                    let _members = _.filter(this.props.membersOfMyPlans, function (m) {return m.status !== "joined" && m.familyPlanId === o._id && m.userId !== Meteor.userId();});
 
                                     return (<div key={o._id}>
                                         {"Your " + (_p && _p.name) + " (" + _members.length + " requests)"}
@@ -108,15 +108,15 @@ class Dashboard extends Component {
                             <CardBody>
                                 <Table bordered>
                                     <tbody>
-                                        {this.props.splittingOffers.map((o) => {
+                                        {this.props.splittingPlans.map((o) => {
+                                            let _youOwnPlan = o.userId === Meteor.userId();
                                             let _p = _.find(this.props.products, function (p) {return p._id === o.productId;});
-                                            let _partner = _.find(this.props.allOffers, function (ofr) {return ofr._id === o.finalMatchOfferId;});
-                                            let _partnerUserId = _partner && _partner.userId;
-                                            let _partnerUser = _partnerUserId && _.find(this.props.users, function (u) {return u._id === _partnerUserId;});
+                                            let _planOwner = _.find(this.props.users, function (u) {return u._id === o.userId;});
+                                            let _members = _.filter(this.props.splittingParticipants, function (m) { return m.familyPlanId === o._id; });
 
                                             return (<tr key={o._id}>
-                                                <td>{(o.offer ? "Your " : ((_partnerUser && _partnerUser.username) + "'s ")) + (_p && _p.name) + (o.offer ? " with " + (_partnerUser && _partnerUser.username) : "")}</td>
-                                                <td>{(o.offer ? "+" : "-") + "$" + o.price}</td>
+                                                <td>{_youOwnPlan ? "Your " : ((_planOwner && _planOwner.username) + "'s ")}{_p && _p.name}{' (' + _members.length + ' out of ' + o.capacity + ' members max)'}</td>
+                                                <td>{_youOwnPlan ? "+" : "-"}{"$"}{_youOwnPlan ? (o.price * (_members.length - 1) / (_members.length)).toFixed(2) : (o.price / _members.length).toFixed(2)}</td>
                                             </tr>);
                                         })}
                                     </tbody>
@@ -147,15 +147,25 @@ export default withTracker((props) => {
     let _membershipsSub = Meteor.subscribe("yourFamilyPlanMemberships");
     let _myPlans = FamilyPlans.find({userId: Meteor.userId()}).fetch();
     let _myPlanMemberships = FamilyPlanParticipants.find({userId: Meteor.userId()}).fetch();
-    console.log("_myPlans", _myPlans);
-    console.log("_myPlanMemberships", _myPlanMemberships);
     let _lookingFor = _.filter(_myPlanMemberships, function (m) {
         return m.status === "new" || m.status === "pending";
     });
+
+    // IDs of plans that you're the owner of
     let _myPlanIds = _.pluck(_myPlans, "_id");
     let _membersOfMyPlans = _myPlans.length > 0 && Meteor.subscribe("familyPlanParticipants", _myPlanIds).ready() &&
         FamilyPlanParticipants.find({familyPlanId: {$in: _myPlanIds}}).fetch() || [];
-    console.log("members of my plans: ", _membersOfMyPlans);
+
+    // plan IDs I am a member of
+    // todo: is all this necessary?
+    let _planIdsIAmSplittingWithOthers = _.pluck(_.filter(_myPlanMemberships, function (m) {return m.status === "joined";}), "familyPlanId");
+    let _participantsOfPlansIHaveSplitWithOthers = _planIdsIAmSplittingWithOthers.length > 0 &&
+        Meteor.subscribe("familyPlanParticipants", _planIdsIAmSplittingWithOthers).ready() &&
+        FamilyPlanParticipants.find({familyPlanId: {$in: _planIdsIAmSplittingWithOthers}, status: "joined"}).fetch() || [];
+    let _userIdsOfPeopleIAmSplittingPlansWith = _.pluck(_participantsOfPlansIHaveSplitWithOthers, "userId");
+    let _plansIAmSplitting = _planIdsIAmSplittingWithOthers.length > 0 &&
+        Meteor.subscribe("familyPlansByIds", _planIdsIAmSplittingWithOthers).ready() &&
+        FamilyPlans.find({_id: {$in: _planIdsIAmSplittingWithOthers}}).fetch() || [];
 
 
     // let _offersSub = Meteor.subscribe("userOffers");
@@ -163,35 +173,22 @@ export default withTracker((props) => {
     let _offers = _.filter(_allOffers, function (o) { return o.userId === Meteor.userId(); });
 
 
-    let _userSpecificOffers = _offers;
-    let _userSpecificOfferIds = _.pluck(_userSpecificOffers, "_id");
-    let _proposedIds = _.pluck(_userSpecificOffers, "proposedMatchOfferId");
-    let _finalIds = _.pluck(_userSpecificOffers, "finalMatchOfferId");
-    let _allOfferIds = _.union(_userSpecificOfferIds, _proposedIds, _finalIds);
-    // let _allOffersSub = _allOfferIds.length > 0 && Meteor.subscribe("offersByIds", _allOfferIds);
-
-
 
     let _productsSub = Meteor.subscribe("products");
     let _products = ProductsCollection.find({}).fetch();
-    let _lookingForOffers = _.filter(_offers, function (o) {
-        return !o.offer && !o.finalMatchOfferId;
-    });
-    let _offeringOffers = _.filter(_offers, function (o) {
-        return o.offer && !o.finalMatchOfferId;
-    });
     let _splittingOffers = _.filter(_offers, function (o) {
         return o.finalMatchOfferId;
     });
-    let _usersSub = _membersOfMyPlans.length > 0 && Meteor.subscribe("users", _.pluck(_membersOfMyPlans, "userId"));
+    let _usersSub = Meteor.subscribe("users", _.union(_.pluck(_membersOfMyPlans, "userId"), _userIdsOfPeopleIAmSplittingPlansWith));
 
     return {
         membersOfMyPlans: _membersOfMyPlans,
-        allOffers: _allOffers,
+        allOffers: [],
         currentUser: Meteor.user(),
         lookingFor: _lookingFor,
-        offering: _myPlans,
-        splittingOffers: _splittingOffers,
+        offering: _.filter(_myPlans, function (p) {return p.members < p.capacity;}),
+        splittingPlans: _plansIAmSplitting,
+        splittingParticipants: _participantsOfPlansIHaveSplitWithOthers,
         products: _products,
         users: Users.find({}).fetch(),
     };

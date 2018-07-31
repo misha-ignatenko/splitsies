@@ -41,6 +41,16 @@ if (Meteor.isServer) {
         return FamilyPlans.find({userId: this.userId});
     });
 
+    Meteor.publish("familyPlansByIds", function familyPlansByIds(familyPlanIds) {
+        check(familyPlanIds, Array);
+
+        if (!this.userId) {
+            return this.ready();
+        }
+
+        return FamilyPlans.find({_id: {$in: familyPlanIds}});
+    });
+
     Meteor.publish("familyPlanParticipants", function familyPlanParticipants(familyPlanIds) {
         check(familyPlanIds, Array);
 
