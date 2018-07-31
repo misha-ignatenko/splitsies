@@ -6,6 +6,7 @@ import { Row, Col, Card, Table, CardHeader, CardBody, Button, Modal, ModalHeader
 import { Offers as OffersCollection } from '../api/offers.js';
 import { Products as ProductsCollection } from '../api/products.js';
 import { Categories as CategoriesCollection } from '../api/categories.js';
+import { FamilyPlans, FamilyPlanParticipants } from '../api/familyPlans.js';
 import { Users } from '../api/users.js';
 
 class Dashboard extends Component {
@@ -40,10 +41,11 @@ class Dashboard extends Component {
                     let _p = _.find(this.props.products, function (p) {
                         return p._id === o.productId;
                     });
+                    console.log("O: ", o);
 
                     return (<tr key={o._id}>
-                        <td>{(o.offer ? "Your " : "Someone's ") + (_p && _p.name) + " for $" + o.price}</td>
-                        <td>{o.proposedMatchOfferId ? (o.lastActionUserId === o.userId ? "Waiting for response" : <Button onClick={this.toggle.bind(this, o._id)}>Respond to offer</Button>) : <span>No offers <Button onClick={this.deleteOffer.bind(this, o._id)} color="danger">Delete request</Button></span>}</td>
+                        <td>{(o.offer ? "Your " : "Someone's ") + (_p && _p.name)}</td>
+                        <td>{o.proposedMatchOfferId ? (o.lastActionByUserId === o.userId ? "Waiting for response" : <Button onClick={this.toggle.bind(this, o._id)}>Respond to offer</Button>) : <span>No offers <Button onClick={this.deleteOffer.bind(this, o._id)} color="danger">Delete request</Button></span>}</td>
                     </tr>);
                 })}
             </tbody>
@@ -67,7 +69,20 @@ class Dashboard extends Component {
                         <Card>
                             <CardHeader>Looking for...</CardHeader>
                             <CardBody>
-                                {this.openAndPendingOffersSummary("lookingForOffers")}
+                                <Table bordered>
+                                    <tbody>
+                                        {this.props.lookingFor.map((o) => {
+                                            let _p = _.find(this.props.products, function (p) {
+                                                return p._id === o.productId;
+                                            });
+
+                                            return (<tr key={o._id}>
+                                                <td>{"Someone's " + (_p && _p.name)}</td>
+                                                <td>{o.status === "pending" ? (o.lastActionByUserId === o.userId ? "Waiting for response" : <Button onClick={this.toggle.bind(this, o._id)}>Respond to offer</Button>) : <span>No offers <Button onClick={this.deleteOffer.bind(this, o._id)} color="danger">Delete request</Button></span>}</td>
+                                            </tr>);
+                                        })}
+                                    </tbody>
+                                </Table>
                             </CardBody>
                         </Card>
                     </Col>
@@ -126,7 +141,19 @@ class Dashboard extends Component {
 }
 
 export default withTracker((props) => {
-    let _offersSub = Meteor.subscribe("userOffers");
+    let _plansSub = Meteor.subscribe("yourFamilyPlans");
+    let _membershipsSub = Meteor.subscribe("yourFamilyPlanMemberships");
+    let _myPlans = FamilyPlans.find({userId: Meteor.userId()}).fetch();
+    let _myPlanMemberships = FamilyPlanParticipants.find({userId: Meteor.userId()}).fetch();
+    console.log("_myPlans", _myPlans);
+    console.log("_myPlanMemberships", _myPlanMemberships);
+    let _lookingFor = _.filter(_myPlanMemberships, function (m) {
+        return m.status === "new" || m.status === "pending";
+    });
+    console.log("looking for: ", _lookingFor);
+
+
+    // let _offersSub = Meteor.subscribe("userOffers");
     let _allOffers = OffersCollection.find({}).fetch();
     let _offers = _.filter(_allOffers, function (o) { return o.userId === Meteor.userId(); });
 
@@ -136,12 +163,12 @@ export default withTracker((props) => {
     let _proposedIds = _.pluck(_userSpecificOffers, "proposedMatchOfferId");
     let _finalIds = _.pluck(_userSpecificOffers, "finalMatchOfferId");
     let _allOfferIds = _.union(_userSpecificOfferIds, _proposedIds, _finalIds);
-    let _allOffersSub = _allOfferIds.length > 0 && Meteor.subscribe("offersByIds", _allOfferIds);
+    // let _allOffersSub = _allOfferIds.length > 0 && Meteor.subscribe("offersByIds", _allOfferIds);
 
 
 
-    let _productsSub = _offers.length > 0 && Meteor.subscribe("products", _.pluck(_offers, "productId"));
-    let _products = _productsSub && _productsSub.ready() && ProductsCollection.find({}).fetch() || [];
+    let _productsSub = Meteor.subscribe("products");
+    let _products = ProductsCollection.find({}).fetch();
     let _lookingForOffers = _.filter(_offers, function (o) {
         return !o.offer && !o.finalMatchOfferId;
     });
@@ -156,7 +183,7 @@ export default withTracker((props) => {
     return {
         allOffers: _allOffers,
         currentUser: Meteor.user(),
-        lookingForOffers: _lookingForOffers,
+        lookingFor: _lookingFor,
         offeringOffers: _offeringOffers,
         splittingOffers: _splittingOffers,
         products: _products,

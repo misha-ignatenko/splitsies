@@ -64,13 +64,13 @@ export default withTracker((props) => {
     let _productsSub = Meteor.subscribe("products");
     let _categoriesSub = Meteor.subscribe("categories");
     if (_.has(props, "offering")) {
-        _offersSubscr = Meteor.subscribe("openOffers", !props.offering);
+        // _offersSubscr = Meteor.subscribe("openOffers", !props.offering);
     }
-    let _offersReady = _offersSubscr && _offersSubscr.ready();
+    // let _offersReady = _offersSubscr && _offersSubscr.ready();
 
     return {
         currentUser: Meteor.user(),
-        offersReady: _offersReady,
+        // offersReady: _offersReady,
         products: ProductsCollection.find({}).fetch(),
         categories: CategoriesCollection.find({}).fetch(),
     };

@@ -66,21 +66,6 @@ if (Meteor.isServer) {
         //         notes: notes,
         //     });
         // },
-        'delete.offer'(offerId) {
-            check(offerId, String);
-
-            let _o = Offers.findOne(offerId);
-
-            if (!this.userId || !_o || _o.userId !== this.userId) {
-                throw new Meteor.Error('not-authorized');
-            }
-
-            if (!_o.proposedMatchOfferId && !_o.finalMatchOfferId) {
-                Offers.remove(offerId);
-            } else {
-                throw new Meteor.Error("Cannot delete offer because it's either pending or final");
-            }
-        },
         'accept.offer.tentative'(offerId) {
             check(offerId, String);
 
