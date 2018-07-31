@@ -32,29 +32,9 @@ class Dashboard extends Component {
         Meteor.call("delete.offer", offerId);
     }
 
-    openAndPendingOffersSummary(key) {
-        let _offers = this.props[key];
-
-        return (<Table bordered>
-            <tbody>
-                {_offers.map((o) => {
-                    let _p = _.find(this.props.products, function (p) {
-                        return p._id === o.productId;
-                    });
-                    console.log("O: ", o);
-
-                    return (<tr key={o._id}>
-                        <td>{(o.offer ? "Your " : "Someone's ") + (_p && _p.name)}</td>
-                        <td>{o.proposedMatchOfferId ? (o.lastActionByUserId === o.userId ? "Waiting for response" : <Button onClick={this.toggle.bind(this, o._id)}>Respond to offer</Button>) : <span>No offers <Button onClick={this.deleteOffer.bind(this, o._id)} color="danger">Delete request</Button></span>}</td>
-                    </tr>);
-                })}
-            </tbody>
-        </Table>);
-    }
-
     dashboardAction(acceptBool) {
         let _that = this;
-        Meteor.call("respond.to.tentative.offer", this.state.selectedOfferId, acceptBool, function (err, res) {
+        Meteor.call("respond.to.pending.offer", this.state.selectedOfferId, acceptBool, function (err, res) {
             if (!err) {
                 _that.toggle();
             };
@@ -93,7 +73,29 @@ class Dashboard extends Component {
                         <Card>
                             <CardHeader>Offering...</CardHeader>
                             <CardBody>
-                                {this.openAndPendingOffersSummary("offeringOffers")}
+                                {this.props.offering.map((o) => {
+                                    let _p = _.find(this.props.products, function (p) {
+                                        return p._id === o.productId;
+                                    });
+                                    let _members = _.filter(this.props.membersOfMyPlans, function (m) {return m.familyPlanId === o._id && m.userId !== Meteor.userId();});
+
+                                    return (<div key={o._id}>
+                                        {"Your " + (_p && _p.name) + " (" + _members.length + " requests)"}
+                                        <Table bordered>
+                                            <tbody>
+                                                {_members.map((m) => {
+                                                    let _u = _.find(this.props.users, function (u) { return u._id === m.userId; });
+
+                                                    return (<tr key={m._id}>
+                                                        <td>{_u && _u.username}</td>
+                                                        <td>{m.lastActionByUserId !== m.userId ? "Waiting for response" : <Button onClick={this.toggle.bind(this, m._id)}>Respond to offer</Button>}
+                                                        </td>
+                                                    </tr>);
+                                                })}
+                                            </tbody>
+                                        </Table>
+                                    </div>);
+                                })}
                             </CardBody>
                         </Card>
                     </Col>
@@ -150,7 +152,10 @@ export default withTracker((props) => {
     let _lookingFor = _.filter(_myPlanMemberships, function (m) {
         return m.status === "new" || m.status === "pending";
     });
-    console.log("looking for: ", _lookingFor);
+    let _myPlanIds = _.pluck(_myPlans, "_id");
+    let _membersOfMyPlans = _myPlans.length > 0 && Meteor.subscribe("familyPlanParticipants", _myPlanIds).ready() &&
+        FamilyPlanParticipants.find({familyPlanId: {$in: _myPlanIds}}).fetch() || [];
+    console.log("members of my plans: ", _membersOfMyPlans);
 
 
     // let _offersSub = Meteor.subscribe("userOffers");
@@ -178,13 +183,14 @@ export default withTracker((props) => {
     let _splittingOffers = _.filter(_offers, function (o) {
         return o.finalMatchOfferId;
     });
-    let _usersSub = _allOffers.length > 0 && Meteor.subscribe("users", _.pluck(_allOffers, "userId"));
+    let _usersSub = _membersOfMyPlans.length > 0 && Meteor.subscribe("users", _.pluck(_membersOfMyPlans, "userId"));
 
     return {
+        membersOfMyPlans: _membersOfMyPlans,
         allOffers: _allOffers,
         currentUser: Meteor.user(),
         lookingFor: _lookingFor,
-        offeringOffers: _offeringOffers,
+        offering: _myPlans,
         splittingOffers: _splittingOffers,
         products: _products,
         users: Users.find({}).fetch(),

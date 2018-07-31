@@ -41,6 +41,16 @@ if (Meteor.isServer) {
         return FamilyPlans.find({userId: this.userId});
     });
 
+    Meteor.publish("familyPlanParticipants", function familyPlanParticipants(familyPlanIds) {
+        check(familyPlanIds, Array);
+
+        if (!this.userId) {
+            return this.ready();
+        }
+
+        return FamilyPlanParticipants.find({familyPlanId: { $in: familyPlanIds } });
+    });
+
     Meteor.methods({
         'create.new.offer'(productId, offeringBool, price, capacity, notes) {
             check(productId, String);
@@ -173,6 +183,27 @@ if (Meteor.isServer) {
 
                 // increment members by 1
                 FamilyPlans.update(_familyPlan._id, { $inc: { members: 1 } });
+            }
+        },
+        "respond.to.pending.offer"(familyPlanParticipantId, acceptBool) {
+            check(familyPlanParticipantId, String);
+            check(acceptBool, Boolean);
+
+            if (!this.userId) {
+                throw new Meteor.Error('not-authorized');
+            }
+
+            let _participant = FamilyPlanParticipants.findOne(familyPlanParticipantId);
+
+            if (acceptBool) {
+                // set status to "joined"
+                FamilyPlanParticipants.update(familyPlanParticipantId, {$set: {status: "joined", lastActionByUserId: this.userId,}});
+            } else {
+                // decrease FamilyPlan members by 1
+                FamilyPlans.update(_participant.familyPlanId, { $inc: { members: -1 } });
+
+                // set status to "new", unset familyPlanId
+                FamilyPlanParticipants.update(familyPlanParticipantId, {$set: {status: "new", lastActionByUserId: this.userId,}, $unset: {familyPlanId: ""}});
             }
         },
     })

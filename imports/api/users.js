@@ -12,6 +12,6 @@ if (Meteor.isServer) {
             _id: {$in: userIds}
         };
 
-        return Users.find(_qry);
+        return Users.find(_qry, {fields: {username: 1}});
     });
 }
