@@ -53,6 +53,7 @@ class Products extends Component {
     render() {
         return (
             <div>
+                <h1>{this.props.offering ? "You are offering your family plan for others to join." : "You are looking to join someone's family plan."}</h1>
                 {this.renderCategories()}
             </div>
         );
