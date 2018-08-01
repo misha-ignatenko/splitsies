@@ -73,7 +73,9 @@ class Products extends Component {
     render() {
         return (
             <div>
-                <h1>{this.props.offering ? "You are offering your family plan for others to join." : "You are looking to join someone's family plan."}</h1>
+                {this.props.offering ? (<h2>You are <span className="offering">offering your</span> family plan for others to join.</h2>)
+                :
+                (<h2>You are <span className="looking">looking to join</span> someone's family plan.</h2>)}
                 <Row>
                     <Col sm="8">
                         <Input placeholder="Product search" type="text" onChange={this.filterProducts.bind(this)}/>

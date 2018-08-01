@@ -45,7 +45,7 @@ class Dashboard extends Component {
             <div>
                 <Row>
                     <Col sm="12">
-                        <Card>
+                        <Card className="looking">
                             <CardHeader>Looking for...</CardHeader>
                             <CardBody>
                                 <Table bordered>
@@ -69,7 +69,7 @@ class Dashboard extends Component {
                 <br/>
                 <Row>
                     <Col sm="12">
-                        <Card>
+                        <Card className="offering">
                             <CardHeader>Offering...</CardHeader>
                             <CardBody>
                                 {this.props.offering.map((o) => {
@@ -102,7 +102,7 @@ class Dashboard extends Component {
                 <br/>
                 <Row>
                     <Col sm="12">
-                        <Card>
+                        <Card className="card-neutral">
                             <CardHeader>Splitting...</CardHeader>
                             <CardBody>
                                 <Table bordered>
