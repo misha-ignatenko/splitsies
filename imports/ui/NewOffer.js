@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { Meteor } from 'meteor/meteor';
 import { withTracker } from 'meteor/react-meteor-data';
-import { Form, FormGroup, InputGroup, InputGroupAddon, Input, Button, Label } from 'reactstrap';
+import { Form, FormGroup, InputGroup, InputGroupAddon, Input, Button, Label, Alert } from 'reactstrap';
 
 import { Products as ProductsCollection } from '../api/products.js';
 import { FamilyPlans, FamilyPlanParticipants } from '../api/familyPlans.js';
@@ -11,14 +11,36 @@ class NewOffer extends Component {
         super(props);
 
         this.state = {
+            visible: false,
+            alertMessage: "",
+            alertType: "",
             capacity: 1,
         };
+
+        this.onDismiss = this.onDismiss.bind(this);
     }
 
     submitOffer() {
-        Meteor.call("create.new.offer", this.props.product._id, this.props.offering, this.state.price, this.state.capacity, this.state.notes, function (err, res) {
-            console.log(err, res);
+        let _that = this;
+        Meteor.call("create.new.offer", this.props.product._id, this.props.offering, this.state.price, this.state.capacity, this.state.notes, function (err, familyPlanParticipantId) {
+            if (!err && familyPlanParticipantId) {
+                _that.setState({
+                    visible: true,
+                    alertType: "success",
+                    alertMessage: "Successfully posted your offer."
+                });
+            } else {
+                _that.setState({
+                    visible: true,
+                    alertType: "danger",
+                    alertMessage: "There's been an error: " + err.message + "."
+                });
+            }
         });
+    }
+
+    onDismiss() {
+        this.setState({ visible: false });
     }
 
     changeInput(type, event) {
@@ -52,6 +74,9 @@ class NewOffer extends Component {
                     <Button onClick={this.submitOffer.bind(this)}>Submit</Button>
                 </Form>
                 <br/>
+                <Alert color={this.state.alertType} isOpen={this.state.visible} toggle={this.onDismiss}>
+                    {this.state.alertMessage}
+                </Alert>
             </div>
         );
     }
