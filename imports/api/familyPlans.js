@@ -91,20 +91,22 @@ if (Meteor.isServer) {
                     members: 1,
                 });
 
-                FamilyPlanParticipants.insert({
+                return FamilyPlanParticipants.insert({
                     userId: this.userId,
                     familyPlanId: _familyPlanId,
                     status: "joined",
                     productId: productId,
                     lastActionByUserId: this.userId,
+                    price: parseFloat((price / capacity).toFixed(2)),
                 });
             } else {
                 // create a new FamilyPlanParticipants without a planId field, with productId field, status "new"
-                FamilyPlanParticipants.insert({
+                return FamilyPlanParticipants.insert({
                     userId: this.userId,
                     status: "new",
                     productId: productId,
                     lastActionByUserId: this.userId,
+                    price: price,
                 });
             }
         },
@@ -129,13 +131,14 @@ if (Meteor.isServer) {
             check(offeringBool, Boolean);
             check(familyPlanDetails, Object);
 
-            console.log(id, offeringBool);
+            if (!this.userId) {
+                throw new Meteor.Error('not-authorized');
+            }
 
             if (offeringBool) {
                 // this means someone is joining your family plan
                 // check if you already have an open family plan offer for others to join
                 let _joinee = FamilyPlanParticipants.findOne(id);
-                console.log("joinee: ", _joinee);
 
                 let _yourFamilyPlan = FamilyPlans.findOne({
                     userId: this.userId,
@@ -143,7 +146,6 @@ if (Meteor.isServer) {
                     $where: function() { return this.members < this.capacity },
                 });
 
-                console.log("your family plan: ", _yourFamilyPlan);
                 let _familyPlanId;
                 if (!_yourFamilyPlan) {
                     // create a FamilyPlan and a FamilyPlanParticipant for yourself
@@ -161,6 +163,7 @@ if (Meteor.isServer) {
                         status: "joined",
                         productId: _joinee.productId,
                         lastActionByUserId: this.userId,
+                        price: parseFloat((familyPlanDetails.price / familyPlanDetails.capacity).toFixed(2)),
                     });
                 } else {
                     _familyPlanId = _yourFamilyPlan._id;
@@ -174,7 +177,6 @@ if (Meteor.isServer) {
             } else {
                 // this means you are joining someone else's existing, open family plan
                 let _familyPlan = FamilyPlans.findOne(id);
-                console.log("you are joining this family plan: ", _familyPlan);
 
                 // check if you have any open offers (status "new")
                 let _yourOpenOffer = FamilyPlanParticipants.findOne({
@@ -183,8 +185,6 @@ if (Meteor.isServer) {
                     status: "new",
                 });
 
-                console.log("you are already looking to join someone: ", _yourOpenOffer);
-
                 if (!_yourOpenOffer) {
                     FamilyPlanParticipants.insert({
                         userId: this.userId,
@@ -192,6 +192,7 @@ if (Meteor.isServer) {
                         status: "pending",
                         productId: _familyPlan.productId,
                         lastActionByUserId: this.userId,
+                        price: parseFloat((_familyPlan.price / _familyPlan.capacity).toFixed(2)),
                     });
                 } else {
                     FamilyPlanParticipants.update(_yourOpenOffer._id, { $set: { familyPlanId: _familyPlan._id, status: "pending", lastActionByUserId: this.userId, } });

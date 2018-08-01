@@ -41,6 +41,11 @@ class Dashboard extends Component {
     }
 
     render() {
+        let _m = this.state.selectedOfferId && FamilyPlanParticipants.findOne(this.state.selectedOfferId);
+        let _joinee = _m && Users.findOne(_m.userId);
+        let _product = _m && ProductsCollection.findOne(_m.productId);
+
+
         return (
             <div>
                 <Row>
@@ -133,15 +138,15 @@ class Dashboard extends Component {
                     </Col>
                 </Row>
                 <br/>
-                <Modal isOpen={this.state.modal} toggle={this.toggle} className={this.props.className}>
-                    <ModalHeader toggle={this.toggle}>Modal title</ModalHeader>
+                <Modal isOpen={this.state.modal} toggle={this.toggle.bind(this, undefined)} className={this.props.className}>
+                    <ModalHeader toggle={this.toggle.bind(this, undefined)}>{_joinee && _joinee.username} is joining {_product && _product.name}</ModalHeader>
                     <ModalBody>
-                        Lorem ipsum dolor sit amet.
+                        Please respond.
                     </ModalBody>
                     <ModalFooter>
-                        <Button color="primary" onClick={this.dashboardAction.bind(this, true)}>Accept</Button>{' '}
-                        <Button color="primary" onClick={this.dashboardAction.bind(this, false)}>Decline</Button>{' '}
-                        <Button color="secondary" onClick={this.toggle}>Cancel</Button>
+                        <Button color="success" onClick={this.dashboardAction.bind(this, true)}>Accept</Button>{' '}
+                        <Button color="danger" onClick={this.dashboardAction.bind(this, false)}>Decline</Button>{' '}
+                        <Button color="secondary" onClick={this.toggle.bind(this, undefined)}>Cancel</Button>
                     </ModalFooter>
                 </Modal>
             </div>
