@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { Meteor } from 'meteor/meteor';
 import { withTracker } from 'meteor/react-meteor-data';
-import { Row, Col } from 'reactstrap';
+import { Row, Col, Input } from 'reactstrap';
 
 import { Products as ProductsCollection } from '../api/products.js';
 import { Categories as CategoriesCollection } from '../api/categories.js';
@@ -13,13 +13,22 @@ class Products extends Component {
     constructor(props) {
         super(props);
 
-        this.state = {};
+        this.state = {
+            productSearchStr: "",
+        };
     }
 
     renderProducts(categoryId) {
+        let _cat = _.find(this.props.categories, function (c) { return c._id === categoryId; });
+        let _searchStr = this.state.productSearchStr;
         let _productsInCategory = _.filter(this.props.products, function (product) {
-            return product.categoryId === categoryId;
+            let _matchesSearch = _.some([product.name, product.description, product.company, _cat.name, _cat.description], function (itemToCheck) {
+                return itemToCheck.toLowerCase().indexOf(_searchStr) >= 0;
+            });
+
+            return product.categoryId === categoryId && _matchesSearch;
         });
+
         return _productsInCategory.map((product) => {
             let _openOffersCount = _.filter(this.props.openOffers, function (offer) {
                 return offer.productId === product._id;
@@ -51,10 +60,19 @@ class Products extends Component {
         })
     }
 
+    filterProducts(event) {
+        this.setState({
+            productSearchStr: event.target.value.toLowerCase(),
+        });
+    }
+
     render() {
         return (
             <div>
                 <h1>{this.props.offering ? "You are offering your family plan for others to join." : "You are looking to join someone's family plan."}</h1>
+                <Col sm="12">
+                    <Input placeholder="Product search" type="text" onChange={this.filterProducts.bind(this)}/>
+                </Col>
                 {this.renderCategories()}
             </div>
         );
