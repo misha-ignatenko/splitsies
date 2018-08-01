@@ -1,3 +1,11 @@
+:root {
+    --theme-blue: #004358;
+    --theme-blue-green: #1F8A70;
+    --theme-lime-green: #BEDB39;
+    --theme-yellow: #FFE11A;
+    --theme-orange: #FD7400;
+}
+
 /* CSS declarations go here */
 body {
     font-family: sans-serif;
@@ -25,10 +33,10 @@ body {
 }
 
 header {
-    background: #d2edf4;
-    background-image: linear-gradient(to bottom, #d0edf5, #e1e5f0 100%);
+    background: var(--theme-blue);
     padding: 20px 15px 15px 15px;
     position: relative;
+    color: white;
 }
 
 #login-buttons {
@@ -47,6 +55,56 @@ form {
     margin-top: 10px;
     margin-bottom: -10px;
     position: relative;
+}
+
+.card.looking {
+    border: 1px var(--theme-blue-green) solid;
+}
+
+.card.looking .card-title, span.looking {
+    color: var(--theme-blue-green);
+}
+
+.card.looking button, .card.looking .card-header {
+    background-color: var(--theme-blue-green);
+    color: white;
+    border: none;
+}
+
+.card.looking button.btn-outline {
+    background-color: transparent;
+    border: 1px var(--theme-blue-green) solid;
+    color: var(--theme-blue-green);
+}
+
+.card.offering {
+    border: 1px var(--theme-orange) solid;
+}
+
+.card.offering .card-title, span.offering {
+    color: var(--theme-orange);
+}
+
+.card.offering button, .card.offering .card-header {
+    background-color: var(--theme-orange);
+    color: white;
+    border: none;
+}
+
+.card.offering button.btn-outline {
+    background-color: transparent;
+    border: 1px var(--theme-orange) solid;
+    color: var(--theme-orange);
+}
+
+.card-neutral {
+    border: 1px var(--theme-blue) solid;
+}
+
+.card-neutral .card-header {
+    background-color: var(--theme-blue);
+    color: white;
+    border: none;
 }
 
 .new-task input {
