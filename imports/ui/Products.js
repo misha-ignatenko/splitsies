@@ -72,7 +72,7 @@ export default withTracker((props) => {
             _openOffers = FamilyPlanParticipants.find().fetch();
         } else {
             Meteor.subscribe("openPlansPerProduct");
-            _openOffers = FamilyPlans.find().fetch();
+            _openOffers = FamilyPlans.find({userId: {$ne: Meteor.userId()}}).fetch();
         }
         // _offersSubscr = Meteor.subscribe("openOffers", !props.offering);
     }
