@@ -24,7 +24,6 @@ class Offers extends Component {
         let _that = this;
         let _familyPlanDetails = {};
         if (this.props.renderInputForm) {
-            console.log(this.state);
             _familyPlanDetails = {
                 price: this.state.price,
                 capacity: this.state.capacity,
@@ -45,7 +44,6 @@ class Offers extends Component {
         event.preventDefault();
         let _st = {};
         _st[type] = _.contains(["price", "capacity"], type) ? parseFloat(event.target.value) : event.target.value;
-        console.log(_st);
         this.setState(_st);
     }
 
@@ -85,9 +83,9 @@ class Offers extends Component {
                 </Row>
                 <br/>
                 <Modal isOpen={this.state.modal} toggle={this.toggle} className={this.props.className}>
-                    <ModalHeader toggle={this.toggle}>Modal title</ModalHeader>
+                    <ModalHeader toggle={this.toggle}>{this.props.product.name}</ModalHeader>
                     <ModalBody>
-                        Lorem ipsum dolor sit amet.
+                        Please provide your offer details.
                         {this.props.renderInputForm && <Form>
                             <FormGroup>
                                 <InputGroup>
