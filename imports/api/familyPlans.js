@@ -24,6 +24,14 @@ if (Meteor.isServer) {
         }
     });
 
+    Meteor.publish("openPlanParticipantsPerProduct", function openPlanParticipants() {
+        return FamilyPlanParticipants.find({status: "new", familyPlanId: { $exists: false }}, {fields: {productId: 1}});
+    });
+
+    Meteor.publish("openPlansPerProduct", function openPlansPerProduct() {
+        return FamilyPlans.find({$where: function() { return this.members < this.capacity }}, {fields: {productId: 1}});
+    });
+
     Meteor.publish("yourFamilyPlanMemberships", function yourFamilyPlanMemberships() {
         if (!this.userId) {
             return this.ready();

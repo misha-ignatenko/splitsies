@@ -5,6 +5,7 @@ import { Row, Col } from 'reactstrap';
 
 import { Products as ProductsCollection } from '../api/products.js';
 import { Categories as CategoriesCollection } from '../api/categories.js';
+import { FamilyPlans, FamilyPlanParticipants } from '../api/familyPlans.js';
 
 import Product from './Product.js';
 
@@ -20,7 +21,7 @@ class Products extends Component {
             return product.categoryId === categoryId;
         });
         return _productsInCategory.map((product) => {
-            let _openOffersCount = _.filter(this.props.offers, function (offer) {
+            let _openOffersCount = _.filter(this.props.openOffers, function (offer) {
                 return offer.productId === product._id;
             }).length;
 
@@ -64,7 +65,15 @@ export default withTracker((props) => {
     let _offersSubscr;
     let _productsSub = Meteor.subscribe("products");
     let _categoriesSub = Meteor.subscribe("categories");
+    let _openOffers = [];
     if (_.has(props, "offering")) {
+        if (props.offering) {
+            Meteor.subscribe("openPlanParticipantsPerProduct");
+            _openOffers = FamilyPlanParticipants.find().fetch();
+        } else {
+            Meteor.subscribe("openPlansPerProduct");
+            _openOffers = FamilyPlans.find().fetch();
+        }
         // _offersSubscr = Meteor.subscribe("openOffers", !props.offering);
     }
     // let _offersReady = _offersSubscr && _offersSubscr.ready();
@@ -74,5 +83,6 @@ export default withTracker((props) => {
         // offersReady: _offersReady,
         products: ProductsCollection.find({}).fetch(),
         categories: CategoriesCollection.find({}).fetch(),
+        openOffers: _openOffers,
     };
 })(Products);
