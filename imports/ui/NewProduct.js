@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { Meteor } from 'meteor/meteor';
 import { withTracker } from 'meteor/react-meteor-data';
-import { Form, FormGroup, InputGroup, InputGroupAddon, Input, Button, Label, Row, Col, Card, CardBody, CardText, CardTitle } from 'reactstrap';
+import { Form, Input, Button, Row, Col, Card, CardBody, CardText, CardTitle } from 'reactstrap';
 
 import { Products } from '../api/products.js';
 import { Categories } from '../api/categories.js';
@@ -11,26 +11,18 @@ class NewProduct extends Component {
         super(props);
 
         this.state = {
-            capacity: 1,
             creatingNewBool: false,
+            newCategoryName: "",
+            newCategoryDescription: "",
+            name: "",
+            description: "",
+            company: "",
+            logoUrl: "",
             selectedCategoryId: undefined,
         };
     }
 
-    submitOffer() {
-        Meteor.call("create.new.offer", this.props.product._id, this.props.offering, this.state.price, this.state.capacity, this.state.notes, function (err, res) {
-            console.log(err, res);
-        });
-    }
-
-    changeInput(type, event) {
-        event.preventDefault();
-        let _st = {};
-        _st[type] = _.contains(["price", "capacity"], type) ? parseFloat(event.target.value) : event.target.value;
-        this.setState(_st);
-    }
-
-    newCatInfo(fieldName, event) {
+    inputInfo(fieldName, event) {
         let _st = {};
         _st[fieldName] = event.target.value;
         this.setState(_st);
@@ -59,15 +51,35 @@ class NewProduct extends Component {
         });
     }
 
-    newProductInfo(fieldName) {
-
+    createNewProduct() {
+        Meteor.call("create.new.product", this.state.selectedCategoryId, this.state.name, this.state.description, this.state.company, this.state.logoUrl, function (err, res) {
+            if (!err && res) {
+                console.log(res);
+            }
+        });
     }
 
-    createNewProduct() {
-        
+    submit() {
+        console.log(this.state);
+        let _that = this;
+        if (this.state.creatingNewBool) {
+            Meteor.call("create.new.category", this.state.newCategoryName, this.state.newCategoryDescription, function (err, res) {
+                if (!err && res) {
+                    _that.selectCategory(res);
+                    _that.createNewProduct();
+                }
+            });
+        } else {
+            _that.createNewProduct();
+        }
+
+
     }
 
     render() {
+        let _renderSubmitButton = ((this.state.creatingNewBool && this.state.newCategoryName.length > 0) || (!this.state.creatingNewBool && this.state.selectedCategoryId)) &&
+            this.state.name.length > 0;
+
         return (
             <div>
                 <h3>Choose a category or create a new one.</h3>
@@ -87,8 +99,8 @@ class NewProduct extends Component {
                     <Col sm="6" onClick={this.selectCreatingNew.bind(this)}>
                         <Card color={this.state.creatingNewBool ? "primary" : ""}>
                             <CardBody>
-                                <CardTitle><Input placeholder="Category name" type="text" onChange={this.newCatInfo.bind(this, "name")}/></CardTitle>
-                                <CardText><Input placeholder="Category description" type="text" onChange={this.newCatInfo.bind(this, "description")}/></CardText>
+                                <CardTitle><Input placeholder="Category name*" type="text" onChange={this.inputInfo.bind(this, "newCategoryName")}/></CardTitle>
+                                <CardText><Input placeholder="Category description" type="text" onChange={this.inputInfo.bind(this, "newCategoryDescription")}/></CardText>
                             </CardBody>
                         </Card>
                     </Col>
@@ -96,11 +108,11 @@ class NewProduct extends Component {
                 <br/>
                 {this.state.creatingNewBool || this.state.selectedCategoryId ? <Form>
                         <h3>Enter product info.</h3>
-                        <Input placeholder="Name" type="text" onChange={this.newProductInfo.bind(this, "name")}/>
-                        <Input placeholder="Description" type="text" onChange={this.newProductInfo.bind(this, "description")}/>
-                        <Input placeholder="Company" type="text" onChange={this.newProductInfo.bind(this, "company")}/>
-                        <Input placeholder="Logo URL" type="text" onChange={this.newProductInfo.bind(this, "logoUrl")}/>
-                        <Button onClick={this.createNewProduct.bind(this)}>Submit</Button>
+                        <Input placeholder="Name*" type="text" onChange={this.inputInfo.bind(this, "name")}/>
+                        <Input placeholder="Description" type="text" onChange={this.inputInfo.bind(this, "description")}/>
+                        <Input placeholder="Company" type="text" onChange={this.inputInfo.bind(this, "company")}/>
+                        <Input placeholder="Logo URL" type="text" onChange={this.inputInfo.bind(this, "logoUrl")}/>
+                        {_renderSubmitButton && <Button onClick={this.submit.bind(this)}>Submit</Button>}
                     </Form> : null}
                 <br/>
             </div>
