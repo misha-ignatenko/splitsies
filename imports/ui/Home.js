@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { Meteor } from 'meteor/meteor';
 import { withTracker } from 'meteor/react-meteor-data';
 
-import { Row, Col, Card, CardTitle, CardText, Button } from 'reactstrap';
+import { Row, Col, Card, CardTitle, CardSubtitle, CardText, Button } from 'reactstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 import Product from './Product.js';
@@ -32,19 +32,20 @@ class Home extends Component {
     render() {
         return (
             <div>
-
                 <Row>
                     <Col sm="6">
-                        <Card body>
-                            <CardTitle>Looking to split (share theirs)</CardTitle>
-                            <CardText>You would like to pay someone for sharing their subscription with you (join theirs).</CardText>
+                        <Card className="looking" body>
+                            <CardTitle>Looking to Split</CardTitle>
+                            <CardSubtitle>Join theirs.</CardSubtitle>
+                            <CardText>You would like to pay someone for sharing their subscription with you.</CardText>
                             <Button onClick={this.homeAction.bind(this, false)}>Go</Button>
                         </Card>
                     </Col>
                     <Col sm="6">
-                        <Card body>
-                            <CardTitle>Offering to split (share yours)</CardTitle>
-                            <CardText>You would like to get paid for sharing your subscription with someone (offer yours).</CardText>
+                        <Card className="offering" body>
+                            <CardTitle>Offering to Split</CardTitle>
+                            <CardSubtitle>Offer yours.</CardSubtitle>
+                            <CardText>You would like to get paid for sharing your subscription with someone.</CardText>
                             <Button onClick={this.homeAction.bind(this, true)}>Go</Button>
                         </Card>
                     </Col>

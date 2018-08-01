@@ -16,14 +16,19 @@ export default class Product extends Component {
 
         return (
             <Col sm="4">
-                <Card>
-                    <CardImg style={{ height: 125, objectFit: "contain" }} src={this.props.productData.logoUrl || "https://placeholdit.imgix.net/~text?txtsize=33&txt=318%C3%97180&w=318&h=180"} alt="Card image cap" />
+                <Card className={this.props.offering ? "offering" : "looking"}>
+                    <CardImg style={{ padding: 16, height: 125, objectFit: "contain" }} src={this.props.productData.logoUrl || "https://placeholdit.imgix.net/~text?txtsize=33&txt=318%C3%97180&w=318&h=180"} alt="Card image cap" />
                     <CardBody>
                         <CardTitle>{this.props.productData.name}</CardTitle>
                         <CardText>{this.props.productData.description}</CardText>
-                        <Button onClick={this.productAction.bind(this)}>{this.props.offering ? (this.props.openOffersCount + " people are looking to join your family plan") : ("Explore " + this.props.openOffersCount + " open family plans")}</Button>
-                        {' '}
-                        <Button onClick={this.newOffer.bind(this)}>Name your price</Button>
+                        <div style={{ textAlign: "center" }}>
+                            {this.props.openOffersCount > 0 ?
+                            (<Button style={{ marginBottom: 8 }} onClick={this.productAction.bind(this)}>{this.props.offering ? (this.props.openOffersCount + " people are looking to join your family plan") : ("Explore " + this.props.openOffersCount + " open family plans")}</Button>)
+                            :
+                            (<CardText>{this.props.offering ? "No one is looking to join yet." : "No one has offered a plan yet."}</CardText>)
+                            }
+                            <Button className="btn-outline" onClick={this.newOffer.bind(this)}>Name your price</Button>
+                        </div>
                     </CardBody>
                 </Card>
             </Col>
