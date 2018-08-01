@@ -85,8 +85,8 @@ class Offers extends Component {
                 <Modal isOpen={this.state.modal} toggle={this.toggle} className={this.props.className}>
                     <ModalHeader toggle={this.toggle}>{this.props.product.name}</ModalHeader>
                     <ModalBody>
-                        Please provide your offer details.
-                        {this.props.renderInputForm && <Form>
+                        {this.props.renderInputForm ? <Form>
+                            Please provide your offer details.
                             <FormGroup>
                                 <InputGroup>
                                     <InputGroupAddon addonType="prepend">$</InputGroupAddon>
@@ -102,7 +102,7 @@ class Offers extends Component {
                                 <Label for="exampleText">Other notes</Label>
                                 <Input type="textarea" name="text" id="exampleText" onChange={this.changeInput.bind(this, "notes")}/>
                             </FormGroup>
-                        </Form>}
+                        </Form> : "Send your request."}
                     </ModalBody>
                     <ModalFooter>
                         <Button color="primary" onClick={this.offerAction.bind(this)}>Send</Button>{' '}

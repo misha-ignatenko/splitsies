@@ -97,6 +97,7 @@ if (Meteor.isServer) {
                     status: "joined",
                     productId: productId,
                     lastActionByUserId: this.userId,
+                    price: parseFloat((price / capacity).toFixed(2)),
                 });
             } else {
                 // create a new FamilyPlanParticipants without a planId field, with productId field, status "new"
@@ -105,6 +106,7 @@ if (Meteor.isServer) {
                     status: "new",
                     productId: productId,
                     lastActionByUserId: this.userId,
+                    price: price,
                 });
             }
         },
@@ -161,6 +163,7 @@ if (Meteor.isServer) {
                         status: "joined",
                         productId: _joinee.productId,
                         lastActionByUserId: this.userId,
+                        price: parseFloat((familyPlanDetails.price / familyPlanDetails.capacity).toFixed(2)),
                     });
                 } else {
                     _familyPlanId = _yourFamilyPlan._id;
@@ -189,6 +192,7 @@ if (Meteor.isServer) {
                         status: "pending",
                         productId: _familyPlan.productId,
                         lastActionByUserId: this.userId,
+                        price: parseFloat((_familyPlan.price / _familyPlan.capacity).toFixed(2)),
                     });
                 } else {
                     FamilyPlanParticipants.update(_yourOpenOffer._id, { $set: { familyPlanId: _familyPlan._id, status: "pending", lastActionByUserId: this.userId, } });
