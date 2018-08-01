@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { Meteor } from 'meteor/meteor';
 import { withTracker } from 'meteor/react-meteor-data';
-import { Row, Col, Card, Table, CardHeader, CardBody, Button, Modal, ModalHeader, ModalBody, ModalFooter } from 'reactstrap';
+import { Row, Col, Card, Table, CardHeader, CardBody, Button, Modal, ModalHeader, ModalBody, ModalFooter, Progress } from 'reactstrap';
 
 import { Products as ProductsCollection } from '../api/products.js';
 import { Categories as CategoriesCollection } from '../api/categories.js';
@@ -112,9 +112,17 @@ class Dashboard extends Component {
                                             let _p = _.find(this.props.products, function (p) {return p._id === o.productId;});
                                             let _planOwner = _.find(this.props.users, function (u) {return u._id === o.userId;});
                                             let _members = _.filter(this.props.splittingParticipants, function (m) { return m.familyPlanId === o._id; });
+                                            let _numJoined = _members.length;
+                                            let _numPending = o.members - _members.length;
 
                                             return (<tr key={o._id}>
-                                                <td>{_youOwnPlan ? "Your " : ((_planOwner && _planOwner.username) + "'s ")}{_p && _p.name}{' (' + _members.length + ' out of ' + o.capacity + ' members max)'}</td>
+                                                <td>{_youOwnPlan ? "Your " : ((_planOwner && _planOwner.username) + "'s ")}{_p && _p.name}{' (' + _members.length + ' out of ' + o.capacity + ' members max)'}
+                                                <br/>
+                                                    <Progress multi>
+                                                        <Progress bar color="success" value={100 * _numJoined / o.capacity}>Joined</Progress>
+                                                        {_numPending > 0 && <Progress bar color="info" value={100 *_numPending / o.capacity}>Pending</Progress>}
+                                                    </Progress>
+                                                </td>
                                                 <td>{_youOwnPlan ? "+" : "-"}{"$"}{_youOwnPlan ? (o.price * (_members.length - 1) / (_members.length)).toFixed(2) : (o.price / _members.length).toFixed(2)}</td>
                                             </tr>);
                                         })}
