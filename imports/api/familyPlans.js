@@ -29,7 +29,7 @@ if (Meteor.isServer) {
     });
 
     Meteor.publish("openPlansPerProduct", function openPlansPerProduct() {
-        return FamilyPlans.find({$where: function() { return this.members < this.capacity }}, {fields: {productId: 1}});
+        return FamilyPlans.find({$where: function() { return this.members < this.capacity }}, {fields: {productId: 1, userId: 1}});
     });
 
     Meteor.publish("yourFamilyPlanMemberships", function yourFamilyPlanMemberships() {

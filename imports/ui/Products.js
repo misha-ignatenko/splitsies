@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { Meteor } from 'meteor/meteor';
 import { withTracker } from 'meteor/react-meteor-data';
-import { Row, Col } from 'reactstrap';
+import { Row, Col, Input, Button } from 'reactstrap';
 
 import { Products as ProductsCollection } from '../api/products.js';
 import { Categories as CategoriesCollection } from '../api/categories.js';
@@ -13,13 +13,22 @@ class Products extends Component {
     constructor(props) {
         super(props);
 
-        this.state = {};
+        this.state = {
+            productSearchStr: "",
+        };
     }
 
     renderProducts(categoryId) {
+        let _cat = _.find(this.props.categories, function (c) { return c._id === categoryId; });
+        let _searchStr = this.state.productSearchStr;
         let _productsInCategory = _.filter(this.props.products, function (product) {
-            return product.categoryId === categoryId;
+            let _matchesSearch = _.some([product.name, product.description, product.company, _cat.name, _cat.description], function (itemToCheck) {
+                return itemToCheck.toLowerCase().indexOf(_searchStr) >= 0;
+            });
+
+            return product.categoryId === categoryId && _matchesSearch;
         });
+
         return _productsInCategory.map((product) => {
             let _openOffersCount = _.filter(this.props.openOffers, function (offer) {
                 return offer.productId === product._id;
@@ -51,12 +60,33 @@ class Products extends Component {
         })
     }
 
+    filterProducts(event) {
+        this.setState({
+            productSearchStr: event.target.value.toLowerCase(),
+        });
+    }
+
+    addProductAction() {
+        this.props.history.push("/product/new");
+    }
+
     render() {
         return (
             <div>
                 {this.props.offering ? (<h2>You are <span className="offering">offering your</span> family plan for others to join.</h2>)
                 :
                 (<h2>You are <span className="looking">looking to join</span> someone's family plan.</h2>)}
+                <Row>
+                    <Col sm="8">
+                        <Input placeholder="Product search" type="text" onChange={this.filterProducts.bind(this)}/>
+                    </Col>
+                    <Col sm="2">
+
+                    </Col>
+                    <Col sm="2">
+                        <Button onClick={this.addProductAction.bind(this)}>+</Button>
+                    </Col>
+                </Row>
                 {this.renderCategories()}
             </div>
         );
@@ -74,7 +104,7 @@ export default withTracker((props) => {
             _openOffers = FamilyPlanParticipants.find().fetch();
         } else {
             Meteor.subscribe("openPlansPerProduct");
-            _openOffers = FamilyPlans.find().fetch();
+            _openOffers = FamilyPlans.find({userId: {$ne: Meteor.userId()}}).fetch();
         }
         // _offersSubscr = Meteor.subscribe("openOffers", !props.offering);
     }

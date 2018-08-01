@@ -7,6 +7,7 @@ import Products from '../../ui/Products.js';
 import Offers from '../../ui/Offers.js';
 import NewOffer from '../../ui/NewOffer.js';
 import Dashboard from '../../ui/Dashboard.js';
+import NewProduct from '../../ui/NewProduct.js';
 
 const browserHistory = createBrowserHistory();
 
@@ -25,6 +26,7 @@ export const renderRoutes = () => (
                 <Route exact path="/looking/new/:productId" component={(props) => <NewOffer history={props.history} offering={false} productId={props.match.params.productId}/>}/>
                 {/*<Route exact path="/lists/:id" component={ListPageContainer}/>*/}
                 <Route exact path="/dashboard" component={Dashboard}/>
+                <Route exact path="/product/new" component={NewProduct}/>
                 {/*<Route exact path="/join" component={AuthPageJoin}/>*/}
                 {/*<Route component={NotFoundPage}/>*/}
             </Switch>

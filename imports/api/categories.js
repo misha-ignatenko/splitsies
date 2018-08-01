@@ -8,4 +8,21 @@ if (Meteor.isServer) {
     Meteor.publish('categories', function productsPublication() {
         return Categories.find({});
     });
+
+    Meteor.methods({
+        "create.new.category"(catName, catDescr) {
+            check(catName, String);
+            check(catDescr, String);
+
+            if (!this.userId) {
+                throw new Meteor.Error('not-authorized');
+            }
+
+            if (Categories.findOne({name: catName})) {
+                throw new Meteor.Error("This category already exists: " + catName);
+            }
+
+            return Categories.insert({name: catName, description: catDescr});
+        },
+    });
 }
