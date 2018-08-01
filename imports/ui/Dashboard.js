@@ -155,6 +155,12 @@ export default withTracker((props) => {
     let _membersOfMyPlans = _myPlans.length > 0 && Meteor.subscribe("familyPlanParticipants", _myPlanIds).ready() &&
         FamilyPlanParticipants.find({familyPlanId: {$in: _myPlanIds}}).fetch() || [];
 
+    // plans you are offering that aren't at their capacity yet (based on number of people that fully joined)
+    let _offering = _.filter(_myPlans, function (p) {
+        let _joined = _.filter(_membersOfMyPlans, function (m) { return m.familyPlanId === p._id && m.status === "joined"; });
+        return p.capacity > _joined.length;
+    });
+
     // plan IDs I am a member of
     // todo: is all this necessary?
     let _planIdsIAmSplittingWithOthers = _.pluck(_.filter(_myPlanMemberships, function (m) {return m.status === "joined";}), "familyPlanId");
@@ -180,7 +186,7 @@ export default withTracker((props) => {
         allOffers: [],
         currentUser: Meteor.user(),
         lookingFor: _lookingFor,
-        offering: _.filter(_myPlans, function (p) {return p.members < p.capacity;}),
+        offering: _offering,
         splittingPlans: _plansIAmSplitting,
         splittingParticipants: _participantsOfPlansIHaveSplitWithOthers,
         products: _products,
