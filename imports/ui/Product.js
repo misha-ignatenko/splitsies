@@ -21,7 +21,7 @@ export default class Product extends Component {
                     <CardBody>
                         <CardTitle>{this.props.productData.name}</CardTitle>
                         <CardText>{this.props.productData.description}</CardText>
-                        <Button onClick={this.productAction.bind(this)}>{this.props.offering ? "x people are looking to join your family plan" : "Explore open family plans"}</Button>
+                        <Button onClick={this.productAction.bind(this)}>{this.props.offering ? (this.props.openOffersCount + " people are looking to join your family plan") : ("Explore " + this.props.openOffersCount + " open family plans")}</Button>
                         {' '}
                         <Button onClick={this.newOffer.bind(this)}>Name your price</Button>
                     </CardBody>
