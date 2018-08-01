@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { Meteor } from 'meteor/meteor';
 import { withTracker } from 'meteor/react-meteor-data';
-import { Row, Col, Input } from 'reactstrap';
+import { Row, Col, Input, Button } from 'reactstrap';
 
 import { Products as ProductsCollection } from '../api/products.js';
 import { Categories as CategoriesCollection } from '../api/categories.js';
@@ -66,13 +66,25 @@ class Products extends Component {
         });
     }
 
+    addProductAction() {
+        this.props.history.push("/product/new");
+    }
+
     render() {
         return (
             <div>
                 <h1>{this.props.offering ? "You are offering your family plan for others to join." : "You are looking to join someone's family plan."}</h1>
-                <Col sm="12">
-                    <Input placeholder="Product search" type="text" onChange={this.filterProducts.bind(this)}/>
-                </Col>
+                <Row>
+                    <Col sm="8">
+                        <Input placeholder="Product search" type="text" onChange={this.filterProducts.bind(this)}/>
+                    </Col>
+                    <Col sm="2">
+
+                    </Col>
+                    <Col sm="2">
+                        <Button onClick={this.addProductAction.bind(this)}>+</Button>
+                    </Col>
+                </Row>
                 {this.renderCategories()}
             </div>
         );
