@@ -119,8 +119,8 @@ class Dashboard extends Component {
                                                 <td>{_youOwnPlan ? "Your " : ((_planOwner && _planOwner.username) + "'s ")}{_p && _p.name}{' (' + _members.length + ' out of ' + o.capacity + ' members max)'}
                                                 <br/>
                                                     <Progress multi>
-                                                        <Progress bar color="success" value={100 * _numJoined / o.capacity}>Joined</Progress>
-                                                        {_numPending > 0 && <Progress bar color="info" value={100 *_numPending / o.capacity}>Pending</Progress>}
+                                                        <Progress bar color="success" value={100 * _numJoined / o.capacity}>Joined ({_numJoined})</Progress>
+                                                        {_numPending > 0 && <Progress bar color="info" value={100 *_numPending / o.capacity}>Pending ({_numPending})</Progress>}
                                                     </Progress>
                                                 </td>
                                                 <td>{_youOwnPlan ? "+" : "-"}{"$"}{_youOwnPlan ? (o.price * (_members.length - 1) / (_members.length)).toFixed(2) : (o.price / _members.length).toFixed(2)}</td>
