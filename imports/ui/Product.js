@@ -23,7 +23,8 @@ export default class Product extends Component {
                         <CardText>{this.props.productData.description}</CardText>
                         <div style={{ textAlign: "center" }}>
                             {this.props.openOffersCount > 0 ?
-                            (<Button style={{ marginBottom: 8 }} onClick={this.productAction.bind(this)}>{this.props.offering ? (this.props.openOffersCount + " people are looking to join your family plan") : ("Explore " + this.props.openOffersCount + " open family plans")}</Button>)
+                            (<Button style={{ marginBottom: 8, whiteSpace: "normal" }} onClick={this.productAction.bind(this)}>
+                                {this.props.offering ? (this.props.openOffersCount + (this.props.openOffersCount > 1 ? " people are " : " person is ") + "looking to join your family plan") : ("Explore " + this.props.openOffersCount + " open family plan" + (this.props.openOffersCount > 1 ? "s" : ""))}</Button>)
                             :
                             (<CardText>{this.props.offering ? "No one is looking to join yet." : "No one has offered a plan yet."}</CardText>)
                             }
