@@ -3,6 +3,11 @@ import { Meteor } from 'meteor/meteor';
 import { withTracker } from 'meteor/react-meteor-data';
 import { Row, Col, Card, CardBody, CardTitle, CardText, Button, Modal, ModalHeader, ModalBody, ModalFooter, Form,
     FormGroup, InputGroup, InputGroupAddon, Input, Label, Alert } from 'reactstrap';
+import { library } from '@fortawesome/fontawesome-svg-core';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faCheckCircle, faTimesCircle } from '@fortawesome/free-solid-svg-icons';
+
+library.add(faCheckCircle, faTimesCircle);
 
 import { FamilyPlans, FamilyPlanParticipants } from '../api/familyPlans.js';
 import { Products as ProductsCollection } from '../api/products.js';
@@ -74,14 +79,15 @@ class Offers extends Component {
 
     renderOffers() {
         return this.props.offers.map((offer) => {
-            let _username = _.find(this.props.users, function (u) {
+            let _u = _.find(this.props.users, function (u) {
                 return u._id === offer.userId;
-            }).username;
+            });
+            let _username = _u.username;
             return (
                 <Col key={offer._id} sm="3">
                     <Card>
                         <CardBody>
-                            <CardTitle>{_username}</CardTitle>
+                            <CardTitle>{_u.verified ? <FontAwesomeIcon color="green" icon="check-circle" size="1x"/> : <FontAwesomeIcon color="grey" icon="times-circle" size="1x"/>}{' '}{_username}</CardTitle>
                             <CardText>${offer.price}</CardText>
                             <Button disabled={this.props.currentUser && offer.userId === this.props.currentUser._id} onClick={this.toggle.bind(this, offer._id)}>Connect</Button>
                         </CardBody>

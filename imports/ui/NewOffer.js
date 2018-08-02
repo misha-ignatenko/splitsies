@@ -59,7 +59,7 @@ class NewOffer extends Component {
                     <FormGroup>
                         <InputGroup>
                             <InputGroupAddon addonType="prepend">$</InputGroupAddon>
-                            <Input placeholder="Price" type="number" step="0.01" onChange={this.changeInput.bind(this, "price")}/>
+                            <Input placeholder={this.props.offering ? "Total family plan price" : "Price you're willing to pay to join"} type="number" step="0.01" onChange={this.changeInput.bind(this, "price")}/>
                         </InputGroup>
                     </FormGroup>
                     {this.props.offering && <FormGroup>
