@@ -77,7 +77,7 @@ if (Meteor.isServer) {
             check(notes, String);
 
             if (!this.userId) {
-                throw new Meteor.Error('not-authorized');
+                throw new Meteor.Error("You need to be logged in.");
             }
 
             if (offeringBool) {
@@ -116,7 +116,7 @@ if (Meteor.isServer) {
             let _o = FamilyPlanParticipants.findOne(offerId);
 
             if (!this.userId || !_o || _o.userId !== this.userId) {
-                throw new Meteor.Error('not-authorized');
+                throw new Meteor.Error("You need to be logged in and be the owner of this family plan.");
             }
 
             // if status was "pending" or "joined" (i.e., document has familyPlanId property), decrease members by 1
@@ -132,7 +132,7 @@ if (Meteor.isServer) {
             check(familyPlanDetails, Object);
 
             if (!this.userId) {
-                throw new Meteor.Error('not-authorized');
+                throw new Meteor.Error("You need to be logged in.");
             }
 
             if (offeringBool) {
@@ -207,7 +207,7 @@ if (Meteor.isServer) {
             check(acceptBool, Boolean);
 
             if (!this.userId) {
-                throw new Meteor.Error('not-authorized');
+                throw new Meteor.Error("You need to be logged in.");
             }
 
             let _participant = FamilyPlanParticipants.findOne(familyPlanParticipantId);

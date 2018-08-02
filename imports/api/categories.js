@@ -15,7 +15,7 @@ if (Meteor.isServer) {
             check(catDescr, String);
 
             if (!this.userId) {
-                throw new Meteor.Error('not-authorized');
+                throw new Meteor.Error("You need to be logged in");
             }
 
             if (Categories.findOne({name: catName})) {

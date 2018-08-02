@@ -25,7 +25,7 @@ if (Meteor.isServer) {
             check(logoUrl, String);
 
             if (!this.userId) {
-                throw new Meteor.Error('not-authorized');
+                throw new Meteor.Error("You need to be logged in.");
             }
 
             if (Products.findOne({name: name})) {
