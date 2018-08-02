@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { Meteor } from 'meteor/meteor';
 import { withTracker } from 'meteor/react-meteor-data';
-import { Row, Col, Card, Table, CardHeader, CardBody, Button, Modal, ModalHeader, ModalBody, ModalFooter, Progress } from 'reactstrap';
+import { Row, Col, Card, Table, CardHeader, CardBody, Button, Modal, ModalHeader, ModalBody, ModalFooter, Progress, Alert } from 'reactstrap';
 
 import { Products as ProductsCollection } from '../api/products.js';
 import { Categories as CategoriesCollection } from '../api/categories.js';
@@ -15,9 +15,17 @@ class Dashboard extends Component {
         this.state = {
             modal: false,
             selectedOfferId: undefined,
+            alertVisible: false,
+            alertMessage: "",
+            alertType: "",
         };
 
         this.toggle = this.toggle.bind(this);
+        this.onDismiss = this.onDismiss.bind(this);
+    }
+
+    onDismiss() {
+        this.setState({ alertVisible: false });
     }
 
     toggle(offerId) {
@@ -28,7 +36,22 @@ class Dashboard extends Component {
     }
 
     deleteOffer(offerId) {
-        Meteor.call("delete.offer", offerId);
+        let _that = this;
+        Meteor.call("delete.offer", offerId, function (err, res) {
+            if (!err) {
+                _that.setState({
+                    alertVisible: true,
+                    alertType: "success",
+                    alertMessage: "Offer deleted successfully."
+                });
+            } else {
+                _that.setState({
+                    alertVisible: true,
+                    alertType: "danger",
+                    alertMessage: "There's been an error: " + err.message + "."
+                });
+            }
+        });
     }
 
     dashboardAction(acceptBool) {
@@ -36,7 +59,18 @@ class Dashboard extends Component {
         Meteor.call("respond.to.pending.offer", this.state.selectedOfferId, acceptBool, function (err, res) {
             if (!err) {
                 _that.toggle();
-            };
+                _that.setState({
+                    alertVisible: true,
+                    alertType: "success",
+                    alertMessage: "Your response has been recorded."
+                });
+            } else {
+                _that.setState({
+                    alertVisible: true,
+                    alertType: "danger",
+                    alertMessage: "There's been an error: " + err.message + "."
+                });
+            }
         });
     }
 
@@ -149,6 +183,9 @@ class Dashboard extends Component {
                         <Button color="secondary" onClick={this.toggle.bind(this, undefined)}>Cancel</Button>
                     </ModalFooter>
                 </Modal>
+                <Alert color={this.state.alertType} isOpen={this.state.alertVisible} toggle={this.onDismiss}>
+                    {this.state.alertMessage}
+                </Alert>
             </div>
         );
     }

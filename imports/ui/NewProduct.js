@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { Meteor } from 'meteor/meteor';
 import { withTracker } from 'meteor/react-meteor-data';
-import { Form, Input, Button, Row, Col, Card, CardBody, CardText, CardTitle } from 'reactstrap';
+import { Form, Input, Button, Row, Col, Card, CardBody, CardText, CardTitle, Alert } from 'reactstrap';
 
 import { Products } from '../api/products.js';
 import { Categories } from '../api/categories.js';
@@ -19,7 +19,16 @@ class NewProduct extends Component {
             company: "",
             logoUrl: "",
             selectedCategoryId: undefined,
+            alertVisible: false,
+            alertMessage: "",
+            alertType: "",
         };
+
+        this.onDismiss = this.onDismiss.bind(this);
+    }
+
+    onDismiss() {
+        this.setState({ alertVisible: false });
     }
 
     inputInfo(fieldName, event) {
@@ -52,15 +61,25 @@ class NewProduct extends Component {
     }
 
     createNewProduct() {
+        let _that = this;
         Meteor.call("create.new.product", this.state.selectedCategoryId, this.state.name, this.state.description, this.state.company, this.state.logoUrl, function (err, res) {
             if (!err && res) {
-                console.log(res);
+                _that.setState({
+                    alertVisible: true,
+                    alertType: "success",
+                    alertMessage: "Product created successfully."
+                });
+            } else {
+                _that.setState({
+                    alertVisible: true,
+                    alertType: "danger",
+                    alertMessage: "There's been an error: " + err.message + "."
+                });
             }
         });
     }
 
     submit() {
-        console.log(this.state);
         let _that = this;
         if (this.state.creatingNewBool) {
             Meteor.call("create.new.category", this.state.newCategoryName, this.state.newCategoryDescription, function (err, res) {
@@ -83,6 +102,9 @@ class NewProduct extends Component {
         return (
             <div>
                 <h3>Choose a category or create a new one.</h3>
+                <Alert color={this.state.alertType} isOpen={this.state.alertVisible} toggle={this.onDismiss}>
+                    {this.state.alertMessage}
+                </Alert>
                 <Row>
                     {this.props.categories.map((c) => {
 
