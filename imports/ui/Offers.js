@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { Meteor } from 'meteor/meteor';
 import { withTracker } from 'meteor/react-meteor-data';
 import { Row, Col, Card, CardBody, CardTitle, CardText, Button, Modal, ModalHeader, ModalBody, ModalFooter, Form,
-    FormGroup, InputGroup, InputGroupAddon, Input, Label } from 'reactstrap';
+    FormGroup, InputGroup, InputGroupAddon, Input, Label, Alert } from 'reactstrap';
 
 import { FamilyPlans, FamilyPlanParticipants } from '../api/familyPlans.js';
 import { Products as ProductsCollection } from '../api/products.js';
@@ -15,9 +15,13 @@ class Offers extends Component {
         this.state = {
             modal: false,
             selectedOfferId: undefined,
+            alertVisible: false,
+            alertMessage: "",
+            alertType: "",
         };
 
         this.toggle = this.toggle.bind(this);
+        this.onDismiss = this.onDismiss.bind(this);
     }
 
     offerAction() {
@@ -33,9 +37,19 @@ class Offers extends Component {
 
 
         Meteor.call("respond.tentatively", this.state.selectedOfferId, this.props.offering, _familyPlanDetails, function (err, res) {
-            console.log(err, res);
             if (!err) {
                 _that.toggle();
+                _that.setState({
+                    alertVisible: true,
+                    alertType: "success",
+                    alertMessage: "Your response is now pending approval from " + (_that.props.offering ? "requestor" : "owner") + "."
+                });
+            } else {
+                _that.setState({
+                    alertVisible: true,
+                    alertType: "danger",
+                    alertMessage: "There's been an error: " + err.message + "."
+                });
             }
         });
     }
@@ -52,6 +66,10 @@ class Offers extends Component {
             modal: !this.state.modal,
             selectedOfferId: offerId,
         });
+    }
+
+    onDismiss() {
+        this.setState({ alertVisible: false });
     }
 
     renderOffers() {
@@ -109,6 +127,9 @@ class Offers extends Component {
                         <Button color="secondary" onClick={this.toggle}>Cancel</Button>
                     </ModalFooter>
                 </Modal>
+                <Alert color={this.state.alertType} isOpen={this.state.alertVisible} toggle={this.onDismiss}>
+                    {this.state.alertMessage}
+                </Alert>
             </div>
         );
     }
