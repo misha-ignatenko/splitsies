@@ -130,6 +130,9 @@ if (Meteor.isServer) {
             check(id, String);
             check(offeringBool, Boolean);
             check(familyPlanDetails, Object);
+            check(familyPlanDetails.price, Number);
+            check(familyPlanDetails.capacity, Number);
+            check(familyPlanDetails.notes, String);
 
             if (!this.userId) {
                 throw new Meteor.Error("You need to be logged in.");

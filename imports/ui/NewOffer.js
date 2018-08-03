@@ -46,8 +46,12 @@ class NewOffer extends Component {
     changeInput(type, event) {
         event.preventDefault();
         let _st = {};
-        _st[type] = _.contains(["price", "capacity"], type) ? parseFloat(event.target.value) : event.target.value;
+        _st[type] = _.contains(["price", "capacity"], type) && event.target.value !== "" ? parseFloat(event.target.value) : event.target.value;
         this.setState(_st);
+    }
+
+    goToDashboard() {
+        this.props.history.push("/dashboard");
     }
 
     render() {
@@ -59,23 +63,23 @@ class NewOffer extends Component {
                     <FormGroup>
                         <InputGroup>
                             <InputGroupAddon addonType="prepend">$</InputGroupAddon>
-                            <Input placeholder={this.props.offering ? "Total family plan price" : "Price you're willing to pay to join"} type="number" step="0.01" onChange={this.changeInput.bind(this, "price")}/>
+                            <Input placeholder={this.props.offering ? "Total family plan price (required)" : "Price you're willing to pay to join (required)"} type="number" step="0.01" onChange={this.changeInput.bind(this, "price")}/>
                         </InputGroup>
                     </FormGroup>
                     {this.props.offering && <FormGroup>
                         <InputGroup>
-                            <Input placeholder="Capacity" type="number" step="1" onChange={this.changeInput.bind(this, "capacity")}/>
+                            <Input placeholder="Capacity (required)" type="number" step="1" onChange={this.changeInput.bind(this, "capacity")}/>
                         </InputGroup>
                     </FormGroup>}
                     <FormGroup>
-                        <Label for="exampleText">Other notes</Label>
+                        <Label for="exampleText">Notes (required)</Label>
                         <Input type="textarea" name="text" id="exampleText" onChange={this.changeInput.bind(this, "notes")}/>
                     </FormGroup>
                     <Button onClick={this.submitOffer.bind(this)}>Submit</Button>
                 </Form>
                 <br/>
                 <Alert color={this.state.alertType} isOpen={this.state.visible} toggle={this.onDismiss}>
-                    {this.state.alertMessage}
+                    {this.state.alertMessage}{" "}{this.state.alertType === "success" ? <Button onClick={this.goToDashboard.bind(this)}>Track status</Button>:  null}
                 </Alert>
             </div>
         );

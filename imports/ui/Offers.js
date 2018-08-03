@@ -62,7 +62,7 @@ class Offers extends Component {
     changeInput(type, event) {
         event.preventDefault();
         let _st = {};
-        _st[type] = _.contains(["price", "capacity"], type) ? parseFloat(event.target.value) : event.target.value;
+        _st[type] = _.contains(["price", "capacity"], type) && event.target.value !== "" ? parseFloat(event.target.value) : event.target.value;
         this.setState(_st);
     }
 
@@ -88,7 +88,9 @@ class Offers extends Component {
                     <Card>
                         <CardBody>
                             <CardTitle>{_u.verified ? <FontAwesomeIcon color="green" icon="check-circle" size="1x"/> : <FontAwesomeIcon color="grey" icon="times-circle" size="1x"/>}{' '}{_username}</CardTitle>
-                            <CardText>${offer.price}</CardText>
+                            {this.props.offering ?
+                                <CardText>{"Can pay: "}${offer.price}</CardText>
+                                : <CardText>Capacity: {offer.capacity}<br/>${(offer.price / offer.capacity).toFixed(2)}{" per person"}</CardText>}
                             <Button disabled={this.props.currentUser && offer.userId === this.props.currentUser._id} onClick={this.toggle.bind(this, offer._id)}>Connect</Button>
                         </CardBody>
                     </Card>
@@ -114,16 +116,16 @@ class Offers extends Component {
                             <FormGroup>
                                 <InputGroup>
                                     <InputGroupAddon addonType="prepend">$</InputGroupAddon>
-                                    <Input placeholder="Price" type="number" step="0.01" onChange={this.changeInput.bind(this, "price")}/>
+                                    <Input placeholder="Price (required)" type="number" step="0.01" onChange={this.changeInput.bind(this, "price")}/>
                                 </InputGroup>
                             </FormGroup>
                             <FormGroup>
                                 <InputGroup>
-                                    <Input placeholder="Capacity" type="number" step="1" onChange={this.changeInput.bind(this, "capacity")}/>
+                                    <Input placeholder="Capacity (required)" type="number" step="1" onChange={this.changeInput.bind(this, "capacity")}/>
                                 </InputGroup>
                             </FormGroup>
                             <FormGroup>
-                                <Label for="exampleText">Other notes</Label>
+                                <Label for="exampleText">Notes (required)</Label>
                                 <Input type="textarea" name="text" id="exampleText" onChange={this.changeInput.bind(this, "notes")}/>
                             </FormGroup>
                         </Form> : "Send your request."}

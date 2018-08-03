@@ -74,6 +74,10 @@ class Dashboard extends Component {
         });
     }
 
+    getUser(userId) {
+        return _.find(this.props.users, function (u) { return u._id === userId; })
+    }
+
     render() {
         let _m = this.state.selectedOfferId && FamilyPlanParticipants.findOne(this.state.selectedOfferId);
         let _joinee = _m && Users.findOne(_m.userId);
@@ -93,9 +97,12 @@ class Dashboard extends Component {
                                             let _p = _.find(this.props.products, function (p) {
                                                 return p._id === o.productId;
                                             });
+                                            let _familyPlan = o.status === "pending" && _.find(this.props.pendingLookingForPlans, function (pl) {return pl._id === o.familyPlanId;});
+                                            let _counterpartyUser = _familyPlan && _familyPlan.userId && this.getUser(_familyPlan.userId);
+                                            let _counterpartyUsername = _counterpartyUser && _counterpartyUser.username || "Someone";
 
                                             return (<tr key={o._id}>
-                                                <td>{"Someone's " + (_p && _p.name)}</td>
+                                                <td>{_counterpartyUsername + "'s " + (_p && _p.name)}</td>
                                                 <td>{o.status === "pending" ? (o.lastActionByUserId === o.userId ? "Waiting for response" : <Button onClick={this.toggle.bind(this, o._id)}>Respond to offer</Button>) : <span>No offers <Button onClick={this.deleteOffer.bind(this, o._id)} color="danger">Delete request</Button></span>}</td>
                                             </tr>);
                                         })}
@@ -122,7 +129,7 @@ class Dashboard extends Component {
                                         <Table bordered>
                                             <tbody>
                                                 {_members.map((m) => {
-                                                    let _u = _.find(this.props.users, function (u) { return u._id === m.userId; });
+                                                    let _u = this.getUser(m.userId);
 
                                                     return (<tr key={m._id}>
                                                         <td>{_u && _u.username}</td>
@@ -149,7 +156,7 @@ class Dashboard extends Component {
                                         {this.props.splittingPlans.map((o) => {
                                             let _youOwnPlan = o.userId === Meteor.userId();
                                             let _p = _.find(this.props.products, function (p) {return p._id === o.productId;});
-                                            let _planOwner = _.find(this.props.users, function (u) {return u._id === o.userId;});
+                                            let _planOwner = this.getUser(o.userId);
                                             let _members = _.filter(this.props.splittingParticipants, function (m) { return m.familyPlanId === o._id; });
                                             let _numJoined = _members.length;
                                             let _numPending = o.members - _members.length;
@@ -200,6 +207,13 @@ export default withTracker((props) => {
         return m.status === "new" || m.status === "pending";
     });
 
+    // get owners of plans I am looking for that are pending
+    let _pendingMemberships = _.filter(_myPlanMemberships, function (m) { return m.status === "pending"; });
+    let _pendingLookingForPlanIds = _.pluck(_pendingMemberships, "familyPlanId");
+    Meteor.subscribe("familyPlansByIds", _pendingLookingForPlanIds);
+    let _pendingLookingForPlans = FamilyPlans.find({_id: {$in: _pendingLookingForPlanIds}}).fetch();
+    let _pendingLookingForOwnerIds = _.pluck(_pendingLookingForPlans, "userId");
+
     // IDs of plans that you're the owner of
     let _myPlanIds = _.pluck(_myPlans, "_id");
     let _membersOfMyPlans = _myPlans.length > 0 && Meteor.subscribe("familyPlanParticipants", _myPlanIds).ready() &&
@@ -229,13 +243,13 @@ export default withTracker((props) => {
 
     let _productsSub = Meteor.subscribe("products");
     let _products = ProductsCollection.find({}).fetch();
-    let _usersSub = Meteor.subscribe("users", _.union(_.pluck(_membersOfMyPlans, "userId"), _userIdsOfPeopleIAmSplittingPlansWith));
+    let _usersSub = Meteor.subscribe("users", _.union(_.pluck(_membersOfMyPlans, "userId"), _userIdsOfPeopleIAmSplittingPlansWith, _pendingLookingForOwnerIds));
 
     return {
         membersOfMyPlans: _membersOfMyPlans,
-        allOffers: [],
         currentUser: Meteor.user(),
         lookingFor: _lookingFor,
+        pendingLookingForPlans: _pendingLookingForPlans,
         offering: _offering,
         splittingPlans: _plansIAmSplitting,
         splittingParticipants: _participantsOfPlansIHaveSplitWithOthers,
