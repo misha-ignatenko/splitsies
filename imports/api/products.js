@@ -2,6 +2,8 @@ import { Meteor } from 'meteor/meteor';
 import { Mongo } from 'meteor/mongo';
 import { check, Match } from 'meteor/check';
 
+import { Users } from "./users.js";
+
 export const Products = new Mongo.Collection('products');
 
 if (Meteor.isServer) {
@@ -26,6 +28,10 @@ if (Meteor.isServer) {
 
             if (!this.userId) {
                 throw new Meteor.Error("You need to be logged in.");
+            }
+
+            if (!Users.findOne(this.userId).admin) {
+                throw new Meteor.Error("You need to be an admin to add a new product.")
             }
 
             if (Products.findOne({name: name})) {

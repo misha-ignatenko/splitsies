@@ -5,13 +5,13 @@ import { check, Match } from 'meteor/check';
 export const Users = Meteor.users;
 
 if (Meteor.isServer) {
-    Meteor.publish('users', function tasksPublication(userIds) {
+    Meteor.publish('users', function usersPublication(userIds) {
         check(userIds, Array);
 
         let _qry = {
             _id: {$in: userIds}
         };
 
-        return Users.find(_qry, {fields: {username: 1, verified: 1}});
+        return Users.find(_qry, {fields: {username: 1, verified: 1, admin: 1}});
     });
 }

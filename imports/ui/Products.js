@@ -6,6 +6,7 @@ import { Row, Col, Input, Button } from 'reactstrap';
 import { Products as ProductsCollection } from '../api/products.js';
 import { Categories as CategoriesCollection } from '../api/categories.js';
 import { FamilyPlans, FamilyPlanParticipants } from '../api/familyPlans.js';
+import { Users } from '../api/users.js';
 
 import Product from './Product.js';
 
@@ -83,9 +84,9 @@ class Products extends Component {
                     <Col sm="2">
 
                     </Col>
-                    <Col sm="2">
+                    {this.props.currentUser && this.props.currentUser.admin && <Col sm="2">
                         <Button onClick={this.addProductAction.bind(this)}>+</Button>
-                    </Col>
+                    </Col>}
                 </Row>
                 {this.renderCategories()}
             </div>
@@ -98,6 +99,7 @@ export default withTracker((props) => {
     let _productsSub = Meteor.subscribe("products");
     let _categoriesSub = Meteor.subscribe("categories");
     let _openOffers = [];
+    let _user = Meteor.userId() && Meteor.subscribe("users", [Meteor.userId()]).ready() && Users.findOne(Meteor.userId());
     if (_.has(props, "offering")) {
         if (props.offering) {
             Meteor.subscribe("openPlanParticipantsPerProduct");
@@ -111,7 +113,7 @@ export default withTracker((props) => {
     // let _offersReady = _offersSubscr && _offersSubscr.ready();
 
     return {
-        currentUser: Meteor.user(),
+        currentUser: _user,
         // offersReady: _offersReady,
         products: ProductsCollection.find({}).fetch(),
         categories: CategoriesCollection.find({}).fetch(),
