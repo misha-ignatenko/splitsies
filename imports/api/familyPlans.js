@@ -24,7 +24,7 @@ if (Meteor.isServer) {
                 from: 'm.ign415@gmail.com',
                 subject: 'Splitsies: spend together',
                 text: "These's been a change in your family plans or family plan memberships. Check your dashboard: https://splitsies.meteorapp.com/dashboard",
-                html: "<strong>These's been a change in your family plans or family plan memberships. Check your dashboard: https://splitsies.meteorapp.com/dashboard</strong>",
+                html: "<strong>These's been a change in your family plans or family plan memberships. Check your dashboard: <a href='https://splitsies.meteorapp.com/dashboard'>https://splitsies.meteorapp.com/dashboard</a></strong>",
             };
             sgMail.send(msg);
         }
@@ -41,7 +41,7 @@ if (Meteor.isServer) {
                 from: 'm.ign415@gmail.com',
                 subject: 'Splitsies: spend together',
                 text: "These's been a change in your family plans or family plan memberships. Check your dashboard: https://splitsies.meteorapp.com/dashboard",
-                html: "<strong>These's been a change in your family plans or family plan memberships. Check your dashboard: https://splitsies.meteorapp.com/dashboard</strong>",
+                html: "<strong>These's been a change in your family plans or family plan memberships. Check your dashboard: <a href='https://splitsies.meteorapp.com/dashboard'>https://splitsies.meteorapp.com/dashboard</a></strong>",
             };
             sgMail.send(msg);
         }
@@ -166,6 +166,28 @@ if (Meteor.isServer) {
 
             FamilyPlans.update(_participant.familyPlanId, { $inc: { members: -1 } });
             _notifyFamilyPlanOwner(_participant.familyPlanId, "new");
+        },
+        "deleteFamilyPlan"(familyPlanId) {
+            check(familyPlanId, String);
+
+            let _plan = FamilyPlans.findOne(familyPlanId);
+            if (!this.userId || !_plan || this.userId !== _plan.userId) {
+                throw new Meteor.Error("You need to be logged in and be the owner of this family plan.");
+            }
+
+            // unlink the people that were in this plan
+            let _membersToNotify = FamilyPlanParticipants.find({familyPlanId: familyPlanId, userId: {$ne: this.userId}}).fetch();
+            _.each(_membersToNotify, function (fpp) {
+                _unlinkFamilyPlanParticipant(fpp._id);
+                _notifyFamilyPlanParticipant(fpp._id, "new");
+            });
+
+            // remove yourself from your plan
+            FamilyPlanParticipants.remove({userId: this.userId, familyPlanId: familyPlanId});
+
+            // delete the family plan
+            _notifyFamilyPlanOwner(familyPlanId, "new");
+            FamilyPlans.remove(familyPlanId);
         },
         'delete.offer'(offerId) {
             check(offerId, String);

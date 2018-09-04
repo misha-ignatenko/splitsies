@@ -77,6 +77,26 @@ class Dashboard extends Component {
         });
     }
 
+    deleteFamilyPlan() {
+        let _that = this;
+        Meteor.call("deleteFamilyPlan", this.state.selectedOfferId, function (err, res) {
+            if (!err) {
+                _that.toggle();
+                _that.setState({
+                    alertVisible: true,
+                    alertType: "success",
+                    alertMessage: "Family plan deleted successfully.",
+                });
+            } else {
+                _that.setState({
+                    alertVisible: true,
+                    alertType: "danger",
+                    alertMessage: "There's been an error: " + err.message + "."
+                });
+            }
+        });
+    }
+
     dashboardAction(acceptBool) {
         let _that = this;
         Meteor.call("respond.to.pending.offer", this.state.selectedOfferId, acceptBool, function (err, res) {
@@ -102,12 +122,12 @@ class Dashboard extends Component {
     }
 
     render() {
-        let _m = this.state.selectedOfferId && FamilyPlanParticipants.findOne(this.state.selectedOfferId);
+        let _m = this.state.selectedOfferId && (FamilyPlanParticipants.findOne(this.state.selectedOfferId) || FamilyPlans.findOne(this.state.selectedOfferId));
         let _joinee = _m && this.getUser(_m.userId);
         let _joineeUsername = _joinee && _joinee.username;
         let _product = _m && ProductsCollection.findOne(_m.productId);
         let _productName = _product && _product.name;
-        let _plan = _m && FamilyPlans.findOne(_m.familyPlanId);
+        let _plan = _m && (FamilyPlans.findOne(_m.familyPlanId) || FamilyPlans.findOne(_m._id));
         let _planOwner = _plan && _plan.userId && this.getUser(_plan.userId);
         let _planOwnerUsername = _planOwner && _planOwner.username;
         let _youArePlanOwner = _planOwner && _planOwner._id === Meteor.userId();
@@ -192,6 +212,7 @@ class Dashboard extends Component {
 
                                             return (<tr key={o._id}>
                                                 <td>{_youOwnPlan ? "Your " : ((_planOwner && _planOwner.username) + "'s ")}{_p && _p.name}{' (' + _members.length + ' out of ' + o.capacity + ' members max)'}
+                                                    {_youOwnPlan && <Button onClick={this.toggle.bind(this, o._id, "deleteFamilyPlan")} color="danger">Delete plan</Button>}
                                                     <br/>
                                                     <Progress multi>
                                                         <Progress bar color="success" value={100 * _numJoined / o.capacity}>Joined ({_numJoined})</Progress>
@@ -232,7 +253,9 @@ class Dashboard extends Component {
                             (_youArePlanOwner ? "your " : ( _planOwnerUsername + "'s ")) + _productName + " family plan") :
                             this.state.modalType === "offerResponse" ?
                                 (_joineeUsername + " is joining " + _productName) :
-                                null
+                                this.state.modalType === "deleteFamilyPlan" ?
+                                    ("Are you sure you want to delete your " + _productName) :
+                                    null
                         }
                     </ModalHeader>
                     <ModalBody>
@@ -240,7 +263,9 @@ class Dashboard extends Component {
                             "Terminating a participant's membership will increase your share of the bill." :
                             this.state.modalType === "offerResponse" ?
                                 "Letting someone into your family plan will decrease your share of the bill." :
-                                null
+                                this.state.modalType === "deleteFamilyPlan" ?
+                                    ("Deleting your family plan will affect " + (_.filter(this.props.membersOfMyPlans, function (m) {return _plan && m.familyPlanId === _plan._id}).length - 1) + " other people who are currently splitting it with you.") :
+                                    null
                         }
                     </ModalBody>
                     <ModalFooter>
@@ -253,7 +278,11 @@ class Dashboard extends Component {
                                 <div>
                                     <Button color="danger" onClick={this.terminate.bind(this)}>Terminate</Button>{' '}
                                     <Button color="secondary" onClick={this.toggle.bind(this, undefined, undefined)}>Cancel</Button>
-                                </div> : null}
+                                </div> : this.state.modalType === "deleteFamilyPlan" ?
+                                    <div>
+                                        <Button color="danger" onClick={this.deleteFamilyPlan.bind(this)}>Yes, delete</Button>{' '}
+                                        <Button color="secondary" onClick={this.toggle.bind(this, undefined, undefined)}>Cancel</Button>
+                                    </div> : null}
                     </ModalFooter>
                 </Modal>
                 <Alert color={this.state.alertType} isOpen={this.state.alertVisible} toggle={this.onDismiss}>
