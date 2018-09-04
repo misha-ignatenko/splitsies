@@ -8,8 +8,8 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import Product from './Product.js';
 
 import { library } from '@fortawesome/fontawesome-svg-core';
-import { faCheckCircle, faTimesCircle, faUser, faTimes } from '@fortawesome/free-solid-svg-icons';
-library.add(faCheckCircle, faTimesCircle, faUser, faTimes);
+import { faCheckCircle, faTimesCircle, faUser, faTimes, faClipboardList } from '@fortawesome/free-solid-svg-icons';
+library.add(faCheckCircle, faTimesCircle, faUser, faTimes, faClipboardList);
 
 class Home extends Component {
     constructor(props) {

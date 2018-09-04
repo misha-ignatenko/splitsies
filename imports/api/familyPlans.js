@@ -1,11 +1,52 @@
 import { Meteor } from 'meteor/meteor';
 import { Mongo } from 'meteor/mongo';
 import { check } from 'meteor/check';
+import sgMail from '@sendgrid/mail';
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 export const FamilyPlans = new Mongo.Collection('familyPlans');
 export const FamilyPlanParticipants = new Mongo.Collection('familyPlanParticipants');
 
 if (Meteor.isServer) {
+
+    function _unlinkFamilyPlanParticipant(familyPlanParticipantId) {
+        FamilyPlanParticipants.update(familyPlanParticipantId, {$set: {status: "new", lastActionByUserId: this.userId,}, $unset: {familyPlanId: ""}});
+    }
+
+    function _notifyFamilyPlanParticipant(familyPlanParticipantId, newStatus) {
+        let _fpp = FamilyPlanParticipants.findOne(familyPlanParticipantId);
+        let _u = _fpp && Meteor.users.findOne(_fpp.userId);
+        let _emails = _u && _u.emails && _.pluck(_u.emails, "address");
+
+        if (_emails) {
+            const msg = {
+                to: _emails,
+                from: 'm.ign415@gmail.com',
+                subject: 'Splitsies: spend together',
+                text: "These's been a change in your family plans or family plan memberships. Check your dashboard: https://splitsies.meteorapp.com/dashboard",
+                html: "<strong>These's been a change in your family plans or family plan memberships. Check your dashboard: https://splitsies.meteorapp.com/dashboard</strong>",
+            };
+            sgMail.send(msg);
+        }
+    }
+
+    function _notifyFamilyPlanOwner(familyPlanId, newStatus) {
+        let _fp = FamilyPlans.findOne(familyPlanId);
+        let _u = _fp && Meteor.users.findOne(_fp.userId);
+        let _emails = _u && _u.emails && _.pluck(_u.emails, "address");
+
+        if (_emails) {
+            const msg = {
+                to: _emails,
+                from: 'm.ign415@gmail.com',
+                subject: 'Splitsies: spend together',
+                text: "These's been a change in your family plans or family plan memberships. Check your dashboard: https://splitsies.meteorapp.com/dashboard",
+                html: "<strong>These's been a change in your family plans or family plan memberships. Check your dashboard: https://splitsies.meteorapp.com/dashboard</strong>",
+            };
+            sgMail.send(msg);
+        }
+    }
+
     Meteor.publish('openOffers', function openOffersPublication(offeringBool, productIds) {
         check(offeringBool, Boolean);
         check(productIds, Array);
@@ -120,7 +161,7 @@ if (Meteor.isServer) {
                 throw new Meteor.Error("You need to be logged in and there should be a plan.");
             }
 
-            FamilyPlanParticipants.update(familyPlanParticipantId, {$set: {status: "new", lastActionByUserId: this.userId,}, $unset: {familyPlanId: ""}});
+            _unlinkFamilyPlanParticipant(familyPlanParticipantId);
 
             FamilyPlans.update(_participant.familyPlanId, { $inc: { members: -1 } });
         },
@@ -192,6 +233,8 @@ if (Meteor.isServer) {
 
                 // link joinee and mark their status as pending
                 FamilyPlanParticipants.update(_joinee._id, { $set: { familyPlanId: _familyPlanId, status: "pending", lastActionByUserId: this.userId, } });
+                _notifyFamilyPlanParticipant(_joinee._id, "pending");
+                _notifyFamilyPlanOwner(_familyPlanId, "pending");
             } else {
                 // this means you are joining someone else's existing, open family plan
                 let _familyPlan = FamilyPlans.findOne(id);
@@ -204,7 +247,7 @@ if (Meteor.isServer) {
                 });
 
                 if (!_yourOpenOffer) {
-                    FamilyPlanParticipants.insert({
+                    let _fppId = FamilyPlanParticipants.insert({
                         userId: this.userId,
                         familyPlanId: _familyPlan._id,
                         status: "pending",
@@ -212,9 +255,12 @@ if (Meteor.isServer) {
                         lastActionByUserId: this.userId,
                         price: parseFloat((_familyPlan.price / _familyPlan.capacity).toFixed(2)),
                     });
+                    _notifyFamilyPlanParticipant(_fppId, "pending");
                 } else {
                     FamilyPlanParticipants.update(_yourOpenOffer._id, { $set: { familyPlanId: _familyPlan._id, status: "pending", lastActionByUserId: this.userId, } });
+                    _notifyFamilyPlanParticipant(_yourOpenOffer._id, "pending");
                 }
+                _notifyFamilyPlanOwner(_familyPlan._id, "pending");
 
                 // increment members by 1
                 FamilyPlans.update(_familyPlan._id, { $inc: { members: 1 } });
@@ -238,7 +284,7 @@ if (Meteor.isServer) {
                 FamilyPlans.update(_participant.familyPlanId, { $inc: { members: -1 } });
 
                 // set status to "new", unset familyPlanId
-                FamilyPlanParticipants.update(familyPlanParticipantId, {$set: {status: "new", lastActionByUserId: this.userId,}, $unset: {familyPlanId: ""}});
+                _unlinkFamilyPlanParticipant(familyPlanParticipantId);
             }
         },
     })

@@ -83,7 +83,12 @@ class Offers extends Component {
                 <Col key={offer._id} sm="3">
                     <Card>
                         <CardBody>
-                            <CardTitle>{_u.verified ? <FontAwesomeIcon color="green" icon="check-circle" size="1x"/> : <FontAwesomeIcon color="grey" icon="times-circle" size="1x"/>}{' '}{_username}</CardTitle>
+                            <CardTitle>{_u.verified ?
+                                <FontAwesomeIcon color="green" icon="check-circle" size="1x"/> :
+                                <FontAwesomeIcon color="grey" icon="times-circle" size="1x"/>}
+                                {' '}
+                                <a href={"/user/" + _u._id}>{_username}</a>
+                            </CardTitle>
                             {this.props.offering ?
                                 <CardText>{"Can pay: "}${offer.price}</CardText>
                                 : <CardText>Capacity: {offer.capacity}<br/>${(offer.price / offer.capacity).toFixed(2)}{" per person"}</CardText>}
