@@ -162,8 +162,10 @@ if (Meteor.isServer) {
             }
 
             _unlinkFamilyPlanParticipant(familyPlanParticipantId);
+            _notifyFamilyPlanParticipant(familyPlanParticipantId, "new");
 
             FamilyPlans.update(_participant.familyPlanId, { $inc: { members: -1 } });
+            _notifyFamilyPlanOwner(_participant.familyPlanId, "new");
         },
         'delete.offer'(offerId) {
             check(offerId, String);
@@ -260,10 +262,10 @@ if (Meteor.isServer) {
                     FamilyPlanParticipants.update(_yourOpenOffer._id, { $set: { familyPlanId: _familyPlan._id, status: "pending", lastActionByUserId: this.userId, } });
                     _notifyFamilyPlanParticipant(_yourOpenOffer._id, "pending");
                 }
-                _notifyFamilyPlanOwner(_familyPlan._id, "pending");
 
                 // increment members by 1
                 FamilyPlans.update(_familyPlan._id, { $inc: { members: 1 } });
+                _notifyFamilyPlanOwner(_familyPlan._id, "pending");
             }
         },
         "respond.to.pending.offer"(familyPlanParticipantId, acceptBool) {
@@ -286,6 +288,9 @@ if (Meteor.isServer) {
                 // set status to "new", unset familyPlanId
                 _unlinkFamilyPlanParticipant(familyPlanParticipantId);
             }
+
+            _notifyFamilyPlanParticipant(familyPlanParticipantId, acceptBool ? "joined" : "new");
+            _notifyFamilyPlanOwner(_participant.familyPlanId, acceptBool ? "joined" : "new");
         },
     })
 }
