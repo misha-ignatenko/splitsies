@@ -58,7 +58,6 @@ class Dashboard extends Component {
     }
 
     terminate() {
-        console.log(this.state.selectedOfferId);
         let _that = this;
         Meteor.call("terminateFamilyPlanParticipant", this.state.selectedOfferId, function (err, res) {
             if (!err) {
@@ -199,17 +198,22 @@ class Dashboard extends Component {
                                                         {_numPending > 0 && <Progress bar color="info" value={100 *_numPending / o.capacity}>Pending ({_numPending})</Progress>}
                                                     </Progress>
                                                     <br/>
+                                                    <Row>
+                                                        {_members.map((m) => {
+                                                            let _u = this.getUser(m.userId);
+                                                            let _canTerminate = (_youOwnPlan && m.userId !== Meteor.userId()) || (!_youOwnPlan && m.userId === Meteor.userId());
 
-                                                    {_members.map((m) => {
-                                                        let _u = this.getUser(m.userId);
-
-                                                        return <span key={m._id}>
-                                                            { (_u && _u.username && m.userId === Meteor.userId() && "you") || (_u && _u.username)}
-                                                            {' '}
-                                                            {( (_youOwnPlan && m.userId !== Meteor.userId()) || (!_youOwnPlan && m.userId === Meteor.userId())) && <FontAwesomeIcon style={{cursor: "pointer"}} onClick={this.toggle.bind(this, m._id, "terminate")} color="red" icon="times" size="1x"/>}
-                                                            {' '}
-                                                        </span>
-                                                    })}
+                                                            return <Col sm="4" key={m._id}>
+                                                                {_canTerminate ? <Alert color="primary" toggle={this.toggle.bind(this, m._id, "terminate")} isOpen={true}>
+                                                                        { (_u && _u.username && m.userId === Meteor.userId() && "you") || (_u && _u.username)}
+                                                                    </Alert> :
+                                                                    <Alert color="primary" isOpen={true} key={m._id}>
+                                                                        { (_u && _u.username && m.userId === Meteor.userId() && "you") || (_u && _u.username)}
+                                                                    </Alert>
+                                                                }
+                                                            </Col>
+                                                        })}
+                                                    </Row>
                                                 </td>
                                                 <td>{_youOwnPlan ? "+" : "-"}{"$"}{_youOwnPlan ? (o.price * (_members.length - 1) / (_members.length)).toFixed(2) : (o.price / _members.length).toFixed(2)}</td>
                                             </tr>);
