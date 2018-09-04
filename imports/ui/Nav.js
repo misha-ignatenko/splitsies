@@ -1,11 +1,7 @@
 import React from 'react';
 import { Row, Col } from 'reactstrap';
 
-import { library } from '@fortawesome/fontawesome-svg-core';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUser } from '@fortawesome/free-solid-svg-icons';
-
-library.add(faUser);
 
 import AccountsUIWrapper from './AccountsUIWrapper.js';
 

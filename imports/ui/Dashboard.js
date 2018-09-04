@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { Meteor } from 'meteor/meteor';
 import { withTracker } from 'meteor/react-meteor-data';
 import { Row, Col, Card, Table, CardHeader, CardBody, Button, Modal, ModalHeader, ModalBody, ModalFooter, Progress, Alert } from 'reactstrap';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import { Products as ProductsCollection } from '../api/products.js';
 import { Categories as CategoriesCollection } from '../api/categories.js';
@@ -14,6 +15,7 @@ class Dashboard extends Component {
 
         this.state = {
             modal: false,
+            modalType: undefined,
             selectedOfferId: undefined,
             alertVisible: false,
             alertMessage: "",
@@ -28,10 +30,11 @@ class Dashboard extends Component {
         this.setState({ alertVisible: false });
     }
 
-    toggle(offerId) {
+    toggle(offerId, optionalType) {
         this.setState({
             modal: !this.state.modal,
             selectedOfferId: offerId,
+            modalType: optionalType,
         });
     }
 
@@ -43,6 +46,27 @@ class Dashboard extends Component {
                     alertVisible: true,
                     alertType: "success",
                     alertMessage: "Offer deleted successfully."
+                });
+            } else {
+                _that.setState({
+                    alertVisible: true,
+                    alertType: "danger",
+                    alertMessage: "There's been an error: " + err.message + "."
+                });
+            }
+        });
+    }
+
+    terminate() {
+        console.log(this.state.selectedOfferId);
+        let _that = this;
+        Meteor.call("terminateFamilyPlanParticipant", this.state.selectedOfferId, function (err, res) {
+            if (!err) {
+                _that.toggle();
+                _that.setState({
+                    alertVisible: true,
+                    alertType: "success",
+                    alertMessage: "Plan member successfully removed.",
                 });
             } else {
                 _that.setState({
@@ -80,8 +104,14 @@ class Dashboard extends Component {
 
     render() {
         let _m = this.state.selectedOfferId && FamilyPlanParticipants.findOne(this.state.selectedOfferId);
-        let _joinee = _m && Users.findOne(_m.userId);
+        let _joinee = _m && this.getUser(_m.userId);
+        let _joineeUsername = _joinee && _joinee.username;
         let _product = _m && ProductsCollection.findOne(_m.productId);
+        let _productName = _product && _product.name;
+        let _plan = _m && FamilyPlans.findOne(_m.familyPlanId);
+        let _planOwner = _plan && _plan.userId && this.getUser(_plan.userId);
+        let _planOwnerUsername = _planOwner && _planOwner.username;
+        let _youArePlanOwner = _planOwner && _planOwner._id === Meteor.userId();
 
 
         return (
@@ -103,7 +133,7 @@ class Dashboard extends Component {
 
                                             return (<tr key={o._id}>
                                                 <td>{_counterpartyUsername + "'s " + (_p && _p.name)}</td>
-                                                <td>{o.status === "pending" ? (o.lastActionByUserId === o.userId ? "Waiting for response" : <Button onClick={this.toggle.bind(this, o._id)}>Respond to offer</Button>) : <span>No offers <Button onClick={this.deleteOffer.bind(this, o._id)} color="danger">Delete request</Button></span>}</td>
+                                                <td>{o.status === "pending" ? (o.lastActionByUserId === o.userId ? "Waiting for response" : <Button onClick={this.toggle.bind(this, o._id, "offerResponse")}>Respond to offer</Button>) : <span>No offers <Button onClick={this.deleteOffer.bind(this, o._id)} color="danger">Delete request</Button></span>}</td>
                                             </tr>);
                                         })}
                                     </tbody>
@@ -133,7 +163,7 @@ class Dashboard extends Component {
 
                                                     return (<tr key={m._id}>
                                                         <td>{_u && _u.username}</td>
-                                                        <td>{m.lastActionByUserId !== m.userId ? "Waiting for response" : <Button onClick={this.toggle.bind(this, m._id)}>Respond to offer</Button>}
+                                                        <td>{m.lastActionByUserId !== m.userId ? "Waiting for response" : <Button onClick={this.toggle.bind(this, m._id, "offerResponse")}>Respond to offer</Button>}
                                                         </td>
                                                     </tr>);
                                                 })}
@@ -163,11 +193,23 @@ class Dashboard extends Component {
 
                                             return (<tr key={o._id}>
                                                 <td>{_youOwnPlan ? "Your " : ((_planOwner && _planOwner.username) + "'s ")}{_p && _p.name}{' (' + _members.length + ' out of ' + o.capacity + ' members max)'}
-                                                <br/>
+                                                    <br/>
                                                     <Progress multi>
                                                         <Progress bar color="success" value={100 * _numJoined / o.capacity}>Joined ({_numJoined})</Progress>
                                                         {_numPending > 0 && <Progress bar color="info" value={100 *_numPending / o.capacity}>Pending ({_numPending})</Progress>}
                                                     </Progress>
+                                                    <br/>
+
+                                                    {_members.map((m) => {
+                                                        let _u = this.getUser(m.userId);
+
+                                                        return <span key={m._id}>
+                                                            { (_u && _u.username && m.userId === Meteor.userId() && "you") || (_u && _u.username)}
+                                                            {' '}
+                                                            {( (_youOwnPlan && m.userId !== Meteor.userId()) || (!_youOwnPlan && m.userId === Meteor.userId())) && <FontAwesomeIcon style={{cursor: "pointer"}} onClick={this.toggle.bind(this, m._id, "terminate")} color="red" icon="times" size="1x"/>}
+                                                            {' '}
+                                                        </span>
+                                                    })}
                                                 </td>
                                                 <td>{_youOwnPlan ? "+" : "-"}{"$"}{_youOwnPlan ? (o.price * (_members.length - 1) / (_members.length)).toFixed(2) : (o.price / _members.length).toFixed(2)}</td>
                                             </tr>);
@@ -179,15 +221,35 @@ class Dashboard extends Component {
                     </Col>
                 </Row>
                 <br/>
-                <Modal isOpen={this.state.modal} toggle={this.toggle.bind(this, undefined)} className={this.props.className}>
-                    <ModalHeader toggle={this.toggle.bind(this, undefined)}>{_joinee && _joinee.username} is joining {_product && _product.name}</ModalHeader>
+                <Modal isOpen={this.state.modal} toggle={this.toggle.bind(this, undefined, undefined)} className={this.props.className}>
+                    <ModalHeader toggle={this.toggle.bind(this, undefined, undefined)}>
+                        {this.state.modalType === "terminate" ?
+                            ("Are you sure you want to remove " + (_youArePlanOwner ? _joineeUsername : "yourself") + " from " +
+                            (_youArePlanOwner ? "your " : ( _planOwnerUsername + "'s ")) + _productName + " family plan") :
+                            this.state.modalType === "offerResponse" ?
+                                (_joineeUsername + " is joining " + _productName) :
+                                null
+                        }
+                    </ModalHeader>
                     <ModalBody>
-                        Please respond.
+                        {this.state.modalType === "terminate" ?
+                            "Terminating a participant's membership will increase your share of the bill." :
+                            this.state.modalType === "offerResponse" ?
+                                "Letting someone into your family plan will decrease your share of the bill." :
+                                null
+                        }
                     </ModalBody>
                     <ModalFooter>
-                        <Button color="success" onClick={this.dashboardAction.bind(this, true)}>Accept</Button>{' '}
-                        <Button color="danger" onClick={this.dashboardAction.bind(this, false)}>Decline</Button>{' '}
-                        <Button color="secondary" onClick={this.toggle.bind(this, undefined)}>Cancel</Button>
+                        {this.state.modalType === "offerResponse" ? <div>
+                                <Button color="success" onClick={this.dashboardAction.bind(this, true)}>Accept</Button>{' '}
+                                <Button color="danger" onClick={this.dashboardAction.bind(this, false)}>Decline</Button>{' '}
+                                <Button color="secondary" onClick={this.toggle.bind(this, undefined, undefined)}>Cancel</Button>
+                            </div> :
+                            this.state.modalType === "terminate" ?
+                                <div>
+                                    <Button color="danger" onClick={this.terminate.bind(this)}>Terminate</Button>{' '}
+                                    <Button color="secondary" onClick={this.toggle.bind(this, undefined, undefined)}>Cancel</Button>
+                                </div> : null}
                     </ModalFooter>
                 </Modal>
                 <Alert color={this.state.alertType} isOpen={this.state.alertVisible} toggle={this.onDismiss}>

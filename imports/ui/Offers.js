@@ -3,11 +3,7 @@ import { Meteor } from 'meteor/meteor';
 import { withTracker } from 'meteor/react-meteor-data';
 import { Row, Col, Card, CardBody, CardTitle, CardText, Button, Modal, ModalHeader, ModalBody, ModalFooter, Form,
     FormGroup, InputGroup, InputGroupAddon, Input, Label, Alert } from 'reactstrap';
-import { library } from '@fortawesome/fontawesome-svg-core';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCheckCircle, faTimesCircle } from '@fortawesome/free-solid-svg-icons';
-
-library.add(faCheckCircle, faTimesCircle);
 
 import { FamilyPlans, FamilyPlanParticipants } from '../api/familyPlans.js';
 import { Products as ProductsCollection } from '../api/products.js';

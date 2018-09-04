@@ -110,6 +110,20 @@ if (Meteor.isServer) {
                 });
             }
         },
+        "terminateFamilyPlanParticipant"(familyPlanParticipantId) {
+            check(familyPlanParticipantId, String);
+
+            let _participant = FamilyPlanParticipants.findOne(familyPlanParticipantId);
+            let _plan = FamilyPlans.findOne(_participant.familyPlanId);
+
+            if (!this.userId || !_plan) {
+                throw new Meteor.Error("You need to be logged in and there should be a plan.");
+            }
+
+            FamilyPlanParticipants.update(familyPlanParticipantId, {$set: {status: "new", lastActionByUserId: this.userId,}, $unset: {familyPlanId: ""}});
+
+            FamilyPlans.update(_participant.familyPlanId, { $inc: { members: -1 } });
+        },
         'delete.offer'(offerId) {
             check(offerId, String);
 
@@ -129,10 +143,6 @@ if (Meteor.isServer) {
         'respond.tentatively'(id, offeringBool, familyPlanDetails) {
             check(id, String);
             check(offeringBool, Boolean);
-            check(familyPlanDetails, Object);
-            check(familyPlanDetails.price, Number);
-            check(familyPlanDetails.capacity, Number);
-            check(familyPlanDetails.notes, String);
 
             if (!this.userId) {
                 throw new Meteor.Error("You need to be logged in.");
@@ -151,6 +161,11 @@ if (Meteor.isServer) {
 
                 let _familyPlanId;
                 if (!_yourFamilyPlan) {
+                    check(familyPlanDetails, Object);
+                    check(familyPlanDetails.price, Number);
+                    check(familyPlanDetails.capacity, Number);
+                    check(familyPlanDetails.notes, String);
+
                     // create a FamilyPlan and a FamilyPlanParticipant for yourself
                     _familyPlanId = FamilyPlans.insert({
                         productId: _joinee.productId,
