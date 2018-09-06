@@ -8,6 +8,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { FamilyPlans, FamilyPlanParticipants } from '../api/familyPlans.js';
 import { Products as ProductsCollection } from '../api/products.js';
 import { Users } from '../api/users.js';
+import { Verifications } from '../api/verifications.js';
 
 class Offers extends Component {
     constructor(props) {
@@ -79,15 +80,20 @@ class Offers extends Component {
                 return u._id === offer.userId;
             });
             let _username = _u.username;
+            let _v = _.filter(this.props.verifications, function (v) {return v.userId === offer.userId;});
+            let _verified = _v.length >= 3;
+
             return (
                 <Col key={offer._id} sm="3">
                     <Card>
                         <CardBody>
-                            <CardTitle>{_u.verified ?
+                            <CardTitle>{_verified ?
                                 <FontAwesomeIcon color="green" icon="check-circle" size="1x"/> :
                                 <FontAwesomeIcon color="grey" icon="times-circle" size="1x"/>}
                                 {' '}
                                 <a href={"/user/" + _u._id}>{_username}</a>
+                                <br/>
+                                {(_v.length + (_v.length === 1 ? " verification" : " verifications"))}
                             </CardTitle>
                             {this.props.offering ?
                                 <CardText>{"Can pay: "}${offer.price}</CardText>
@@ -158,6 +164,8 @@ export default withTracker((props) => {
     let _offers = props.offering ? FamilyPlanParticipants.find(_qry).fetch() : FamilyPlans.find({_id: {$nin: _plansYoureIn}}).fetch();
     let _counterOffers = !props.offering ? FamilyPlanParticipants.find(_qry).fetch() : FamilyPlans.find({}).fetch();
     let _usersSub = _offers && Meteor.subscribe("users", _.pluck(_offers, "userId"));
+    let _users = _usersSub && _usersSub.ready() && Users.find({}).fetch();
+    let _verificationsSub = _users && Meteor.subscribe("verificationsForUserIds", _.pluck(_users, "_id"));
 
     return {
         plansYoureIn: _plansYoureIn,
@@ -166,5 +174,6 @@ export default withTracker((props) => {
         renderInputForm: props.offering && _.filter(_counterOffers, function (co) { return co.userId === Meteor.userId(); }).length === 0,
         product: _product,
         users: _usersSub && _usersSub.ready() && Users.find({}).fetch(),
+        verifications: Verifications.find().fetch(),
     };
 })(Offers);
