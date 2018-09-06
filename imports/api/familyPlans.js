@@ -10,10 +10,9 @@ export const FamilyPlanParticipants = new Mongo.Collection('familyPlanParticipan
 if (Meteor.isServer) {
 
     function _sendEmail(userId, emailText) {
-        let _u = Meteor.users.findOne(userId);
-        let _emails = _u && _u.emails && _.pluck(_u.emails, "address");
+        let _emails = _getUserEmailAddresses(userId);
 
-        if (_emails) {
+        if (_emails.length > 0) {
             let _msg = {
                 to: _emails,
                 from: "m.ign415@gmail.com",
@@ -29,12 +28,20 @@ if (Meteor.isServer) {
         FamilyPlanParticipants.update(familyPlanParticipantId, {$set: {status: "new", lastActionByUserId: this.userId,}, $unset: {familyPlanId: ""}});
     }
 
+    function _getUserEmailAddresses(userId) {
+        let _u = Meteor.users.findOne(userId);
+        let _emails = _u && _u.emails && _.pluck(_u.emails, "address") || [];
+        return _emails;
+    }
+
     function _notifyFamilyPlanParticipant(familyPlanParticipantId, newStatus, oldStatus) {
         let _fpp = FamilyPlanParticipants.findOne(familyPlanParticipantId);
         let _youAreInitiating = _fpp && _fpp.userId === _fpp.lastActionByUserId;
         let _emailText = "";
         if (newStatus === "joined") {
-            _emailText = "You've successfully joined a family plan.";
+            let _fp = _fpp && _fpp.familyPlanId && FamilyPlans.findOne(_fpp.familyPlanId);
+            let _emails = _fp && _fp.userId && _getUserEmailAddresses(_fp.userId);
+            _emailText = "You've successfully joined a family plan. Owner's email(s): " + _emails.join(", ");
         } else if (newStatus === "pending") {
             if (_youAreInitiating) {
                 _emailText = "Your request to join is now pending approval from the family plan owner.";
@@ -336,7 +343,7 @@ if (Meteor.isServer) {
 
             let _planOwnerIsInitiating = _participant.userId === this.userId;
             _notifyFamilyPlanParticipant(familyPlanParticipantId, acceptBool ? "joined" : "new", _oldStatus);
-            _notifyFamilyPlanOwner(_participant.familyPlanId, acceptBool ? "Your family plan now has one more member." : (_planOwnerIsInitiating ? "You have declined someone's request to join your family plan." : "A potential participant has declined your request for them to join your family plan."));
+            _notifyFamilyPlanOwner(_participant.familyPlanId, acceptBool ? ("Your family plan now has one more member. The new member's email(s) is(are): " + _getUserEmailAddresses(_participant.userId)) : (_planOwnerIsInitiating ? "You have declined someone's request to join your family plan." : "A potential participant has declined your request for them to join your family plan."));
         },
     })
 }
