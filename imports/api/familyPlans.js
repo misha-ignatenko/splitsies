@@ -106,6 +106,15 @@ if (Meteor.isServer) {
         return FamilyPlanParticipants.find({userId: this.userId});
     });
 
+    Meteor.publish("usersFamilyPlanMemberships", function usersFamilyPlanMemberships(userIds) {
+        check(userIds, Array);
+        if (!this.userId) {
+            return this.ready();
+        }
+
+        return FamilyPlanParticipants.find({userId: {$in: userIds}});
+    });
+
     Meteor.publish("yourFamilyPlans", function yourFamilyPlans() {
         if (!this.userId) {
             return this.ready();

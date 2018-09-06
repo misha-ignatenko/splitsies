@@ -7,6 +7,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import { Users } from '../api/users.js';
 import { Verifications } from '../api/verifications.js';
+import { FamilyPlanParticipants } from '../api/familyPlans.js';
 
 class User extends Component {
     constructor(props) {
@@ -67,10 +68,16 @@ class User extends Component {
 
     render() {
         let _viewingYourProfile = this.props.profileUser && this.props.currentUser && this.props.profileUser._id === this.props.currentUser._id;
+        let _plansJoined = _.filter(this.props.memberships, function (m) {return m.status === "joined";});
+        let _plansPending = _.filter(this.props.memberships, function (m) {return m.status === "pending";});
 
         return (
             <div>
                 {_viewingYourProfile && <Button onClick={this.toggle.bind(this)}>Add verification</Button>}
+
+                <h3>{this.props.profileUser && this.props.profileUser.username}</h3>
+
+                {this.props.verficiations.length === 0 && "No verifications on file"}
 
                 <br/>
                 <Row>
@@ -80,7 +87,7 @@ class User extends Component {
                             <Card>
                                 <CardBody>
                                     <CardTitle>{v.type}</CardTitle>
-                                    <CardText>{v.type === "Social" ?
+                                    <CardText>{v.type === "Social Media" ?
                                         <a target="_blank" href={v.details}>{v.details.split(".com")[0].split("www.")[1]}</a> :
                                         <span><FontAwesomeIcon color="green" icon="check-circle" size="2x"/> verified</span>}
                                     </CardText>
@@ -91,21 +98,23 @@ class User extends Component {
                     })}
                 </Row>
 
+                <h1>Currently going Splitsies on {_plansJoined.length + _plansPending.length} shared plans{_plansPending.length > 0 && (" (" + _plansPending.length + " pending)")}.</h1>
+
                 <Modal isOpen={this.state.modal} toggle={this.toggle} className={this.props.className}>
                     <ModalHeader toggle={this.toggle}>Adding verification</ModalHeader>
                     <ModalBody>
                         <Label>Type (click one to select):</Label>
                         <br/>
                         <ButtonGroup>
-                            <Button color="info" onClick={this.setVerificationType.bind(this, "Social")} active={this.state.verificationType === "Social"}>Social</Button>
+                            <Button color="info" onClick={this.setVerificationType.bind(this, "Social Media")} active={this.state.verificationType === "Social Media"}>Social Media</Button>
                             <Button color="info" onClick={this.setVerificationType.bind(this, "Phone")} active={this.state.verificationType === "Phone"}>Phone</Button>
-                            <Button color="info" onClick={this.setVerificationType.bind(this, "Government")} active={this.state.verificationType === "Government"}>Government</Button>
+                            <Button color="info" onClick={this.setVerificationType.bind(this, "Government ID")} active={this.state.verificationType === "Government ID"}>Government ID</Button>
                         </ButtonGroup>
                         <br/><br/>
-                        {this.state.verificationType === "Social" ?
+                        {this.state.verificationType === "Social Media" ?
                             "A link to your social media profile" :
                             this.state.verificationType === "Phone" ? "Enter your phone number" :
-                                this.state.verificationType === "Government" ?
+                                this.state.verificationType === "Government ID" ?
                                     "Enter your driver's license ID" :
                                     ""
                         }
@@ -128,14 +137,16 @@ class User extends Component {
 export default withTracker((props) => {
     let _userId = props.match.params.userId || Meteor.userId();
     let _sub = Meteor.subscribe("users", [_userId]);
-    let _userObj = Users.findOne({$or: [{_id: _userId}, {username: _userId}]})
+    let _userObj = Users.findOne({$or: [{_id: _userId}, {username: _userId}]});
 
     let _verificationsSub = _userObj && Meteor.subscribe("verificationsForUserIds", [_userObj._id]);
     let _verifications = Verifications.find().fetch();
+    let _fppSub = _userObj && Meteor.subscribe("usersFamilyPlanMemberships", [_userObj._id]);
 
     return {
         currentUser: Meteor.user(),
         profileUser: _userObj,
         verficiations: _verifications,
+        memberships: FamilyPlanParticipants.find().fetch(),
     };
 })(User);
