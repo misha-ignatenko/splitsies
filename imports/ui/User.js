@@ -1,7 +1,9 @@
 import React, { Component } from 'react';
 import { Meteor } from 'meteor/meteor';
 import { withTracker } from 'meteor/react-meteor-data';
-import { Input, Modal, ModalHeader, ModalBody, ModalFooter, ButtonGroup, Button, Alert, Label } from 'reactstrap';
+import { Input, Modal, ModalHeader, ModalBody, ModalFooter, ButtonGroup, Button, Alert, Label, Row, Col,
+    Card, CardBody, CardTitle, CardText } from 'reactstrap';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import { Users } from '../api/users.js';
 import { Verifications } from '../api/verifications.js';
@@ -70,7 +72,24 @@ class User extends Component {
             <div>
                 {_viewingYourProfile && <Button onClick={this.toggle.bind(this)}>Add verification</Button>}
 
+                <br/>
+                <Row>
+                    {this.props.verficiations.map((v) => {
 
+                        return <Col sm="4" key={v._id}>
+                            <Card>
+                                <CardBody>
+                                    <CardTitle>{v.type}</CardTitle>
+                                    <CardText>{v.type === "Social" ?
+                                        <a target="_blank" href={v.details}>{v.details.split(".com")[0].split("www.")[1]}</a> :
+                                        <span><FontAwesomeIcon color="green" icon="check-circle" size="2x"/> verified</span>}
+                                    </CardText>
+                                </CardBody>
+                            </Card>
+                            <br/>
+                        </Col>
+                    })}
+                </Row>
 
                 <Modal isOpen={this.state.modal} toggle={this.toggle} className={this.props.className}>
                     <ModalHeader toggle={this.toggle}>Adding verification</ModalHeader>
@@ -78,15 +97,15 @@ class User extends Component {
                         <Label>Type (click one to select):</Label>
                         <br/>
                         <ButtonGroup>
-                            <Button color="info" onClick={this.setVerificationType.bind(this, "social")} active={this.state.verificationType === "social"}>Social</Button>
-                            <Button color="info" onClick={this.setVerificationType.bind(this, "phone")} active={this.state.verificationType === "phone"}>Phone</Button>
-                            <Button color="info" onClick={this.setVerificationType.bind(this, "govt")} active={this.state.verificationType === "govt"}>Government</Button>
+                            <Button color="info" onClick={this.setVerificationType.bind(this, "Social")} active={this.state.verificationType === "Social"}>Social</Button>
+                            <Button color="info" onClick={this.setVerificationType.bind(this, "Phone")} active={this.state.verificationType === "Phone"}>Phone</Button>
+                            <Button color="info" onClick={this.setVerificationType.bind(this, "Government")} active={this.state.verificationType === "Government"}>Government</Button>
                         </ButtonGroup>
                         <br/><br/>
-                        {this.state.verificationType === "social" ?
+                        {this.state.verificationType === "Social" ?
                             "A link to your social media profile" :
-                            this.state.verificationType === "phone" ? "Enter your phone number" :
-                                this.state.verificationType === "govt" ?
+                            this.state.verificationType === "Phone" ? "Enter your phone number" :
+                                this.state.verificationType === "Government" ?
                                     "Enter your driver's license ID" :
                                     ""
                         }
@@ -113,10 +132,10 @@ export default withTracker((props) => {
 
     let _verificationsSub = _userObj && Meteor.subscribe("verificationsForUserIds", [_userObj._id]);
     let _verifications = Verifications.find().fetch();
-    console.log(_verifications);
 
     return {
         currentUser: Meteor.user(),
         profileUser: _userObj,
+        verficiations: _verifications,
     };
 })(User);
