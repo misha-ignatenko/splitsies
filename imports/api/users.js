@@ -9,7 +9,7 @@ if (Meteor.isServer) {
         check(userIds, Array);
 
         let _qry = {
-            _id: {$in: userIds}
+            $or: [{_id: {$in: userIds}}, {username: {$in: userIds}}]
         };
 
         return Users.find(_qry, {fields: {username: 1, verified: 1, admin: 1}});
