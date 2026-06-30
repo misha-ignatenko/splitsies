@@ -9,8 +9,8 @@ export const FamilyPlanParticipants = new Mongo.Collection('familyPlanParticipan
 
 if (Meteor.isServer) {
 
-    function _sendEmail(userId, emailText) {
-        let _emails = _getUserEmailAddresses(userId);
+    async function _sendEmail(userId, emailText) {
+        let _emails = await _getUserEmailAddresses(userId);
 
         if (_emails.length > 0) {
             let _msg = {
@@ -20,27 +20,28 @@ if (Meteor.isServer) {
                 html: emailText + "<br/><strong>Check your dashboard here: <a href='https://splitsies.meteorapp.com/dashboard'>https://splitsies.meteorapp.com/dashboard</a></strong>",
             };
 
+            return;
             sgMail.send(_msg);
         }
     }
 
-    function _unlinkFamilyPlanParticipant(familyPlanParticipantId) {
-        FamilyPlanParticipants.update(familyPlanParticipantId, {$set: {status: "new", lastActionByUserId: this.userId,}, $unset: {familyPlanId: ""}});
+    async function _unlinkFamilyPlanParticipant(actingUserId, familyPlanParticipantId) {
+        await FamilyPlanParticipants.updateAsync(familyPlanParticipantId, {$set: {status: "new", lastActionByUserId: actingUserId,}, $unset: {familyPlanId: ""}});
     }
 
-    function _getUserEmailAddresses(userId) {
-        let _u = Meteor.users.findOne(userId);
+    async function _getUserEmailAddresses(userId) {
+        let _u = await Meteor.users.findOneAsync(userId);
         let _emails = _u && _u.emails && _.pluck(_u.emails, "address") || [];
         return _emails;
     }
 
-    function _notifyFamilyPlanParticipant(familyPlanParticipantId, newStatus, oldStatus) {
-        let _fpp = FamilyPlanParticipants.findOne(familyPlanParticipantId);
+    async function _notifyFamilyPlanParticipant(familyPlanParticipantId, newStatus, oldStatus) {
+        let _fpp = await FamilyPlanParticipants.findOneAsync(familyPlanParticipantId);
         let _youAreInitiating = _fpp && _fpp.userId === _fpp.lastActionByUserId;
         let _emailText = "";
         if (newStatus === "joined") {
-            let _fp = _fpp && _fpp.familyPlanId && FamilyPlans.findOne(_fpp.familyPlanId);
-            let _emails = _fp && _fp.userId && _getUserEmailAddresses(_fp.userId);
+            let _fp = _fpp && _fpp.familyPlanId && await FamilyPlans.findOneAsync(_fpp.familyPlanId);
+            let _emails = _fp && _fp.userId && await _getUserEmailAddresses(_fp.userId);
             _emailText = "You've successfully joined a family plan. Owner's email(s): " + _emails.join(", ");
         } else if (newStatus === "pending") {
             if (_youAreInitiating) {
@@ -63,13 +64,13 @@ if (Meteor.isServer) {
                 }
             }
         }
-        _fpp && _sendEmail(_fpp.userId, _emailText);
+        _fpp && await _sendEmail(_fpp.userId, _emailText);
     }
 
-    function _notifyFamilyPlanOwner(familyPlanId, newStatus) {
-        let _fp = FamilyPlans.findOne(familyPlanId);
+    async function _notifyFamilyPlanOwner(familyPlanId, newStatus) {
+        let _fp = await FamilyPlans.findOneAsync(familyPlanId);
         let _emailText = newStatus;
-        _fp && _sendEmail(_fp.userId, _emailText);
+        _fp && await _sendEmail(_fp.userId, _emailText);
     }
 
     Meteor.publish('openOffers', function openOffersPublication(offeringBool, productIds) {
@@ -144,7 +145,7 @@ if (Meteor.isServer) {
     });
 
     Meteor.methods({
-        'create.new.offer'(productId, offeringBool, price, capacity, notes) {
+        async 'create.new.offer'(productId, offeringBool, price, capacity, notes) {
             check(productId, String);
             check(offeringBool, Boolean);
             check(price, Number);
@@ -157,7 +158,7 @@ if (Meteor.isServer) {
 
             if (offeringBool) {
                 // create a FamilyPlans and FamilyPlanParticipants objects for the user
-                let _familyPlanId = FamilyPlans.insert({
+                let _familyPlanId = await FamilyPlans.insertAsync({
                     productId: productId,
                     price: price,
                     userId: this.userId,
@@ -166,7 +167,7 @@ if (Meteor.isServer) {
                     members: 1,
                 });
 
-                return FamilyPlanParticipants.insert({
+                return FamilyPlanParticipants.insertAsync({
                     userId: this.userId,
                     familyPlanId: _familyPlanId,
                     status: "joined",
@@ -176,7 +177,7 @@ if (Meteor.isServer) {
                 });
             } else {
                 // create a new FamilyPlanParticipants without a planId field, with productId field, status "new"
-                return FamilyPlanParticipants.insert({
+                return FamilyPlanParticipants.insertAsync({
                     userId: this.userId,
                     status: "new",
                     productId: productId,
@@ -185,50 +186,50 @@ if (Meteor.isServer) {
                 });
             }
         },
-        "terminateFamilyPlanParticipant"(familyPlanParticipantId) {
+        async "terminateFamilyPlanParticipant"(familyPlanParticipantId) {
             check(familyPlanParticipantId, String);
 
-            let _participant = FamilyPlanParticipants.findOne(familyPlanParticipantId);
-            let _plan = FamilyPlans.findOne(_participant.familyPlanId);
+            let _participant = await FamilyPlanParticipants.findOneAsync(familyPlanParticipantId);
+            let _plan = await FamilyPlans.findOneAsync(_participant.familyPlanId);
 
             if (!this.userId || !_plan) {
                 throw new Meteor.Error("You need to be logged in and there should be a plan.");
             }
 
             let _oldStatus = _participant.status;
-            _unlinkFamilyPlanParticipant(familyPlanParticipantId);
-            _notifyFamilyPlanParticipant(familyPlanParticipantId, "new", _oldStatus);
+            await _unlinkFamilyPlanParticipant(this.userId, familyPlanParticipantId);
+            await _notifyFamilyPlanParticipant(familyPlanParticipantId, "new", _oldStatus);
 
-            FamilyPlans.update(_participant.familyPlanId, { $inc: { members: -1 } });
-            _notifyFamilyPlanOwner(_participant.familyPlanId, "You have removed a participant from your family plan.");
+            await FamilyPlans.updateAsync(_participant.familyPlanId, { $inc: { members: -1 } });
+            await _notifyFamilyPlanOwner(_participant.familyPlanId, "You have removed a participant from your family plan.");
         },
-        "deleteFamilyPlan"(familyPlanId) {
+        async "deleteFamilyPlan"(familyPlanId) {
             check(familyPlanId, String);
 
-            let _plan = FamilyPlans.findOne(familyPlanId);
+            let _plan = await FamilyPlans.findOneAsync(familyPlanId);
             if (!this.userId || !_plan || this.userId !== _plan.userId) {
                 throw new Meteor.Error("You need to be logged in and be the owner of this family plan.");
             }
 
             // unlink the people that were in this plan
-            let _membersToNotify = FamilyPlanParticipants.find({familyPlanId: familyPlanId, userId: {$ne: this.userId}}).fetch();
-            _.each(_membersToNotify, function (fpp) {
+            let _membersToNotify = await FamilyPlanParticipants.find({familyPlanId: familyPlanId, userId: {$ne: this.userId}}).fetchAsync();
+            for (const fpp of _membersToNotify) {
                 let _oldStatus = fpp.status;
-                _unlinkFamilyPlanParticipant(fpp._id);
-                _notifyFamilyPlanParticipant(fpp._id, "new", _oldStatus);
-            });
+                await _unlinkFamilyPlanParticipant(this.userId, fpp._id);
+                await _notifyFamilyPlanParticipant(fpp._id, "new", _oldStatus);
+            }
 
             // remove yourself from your plan
-            FamilyPlanParticipants.remove({userId: this.userId, familyPlanId: familyPlanId});
+            await FamilyPlanParticipants.removeAsync({userId: this.userId, familyPlanId: familyPlanId});
 
             // delete the family plan
-            _notifyFamilyPlanOwner(familyPlanId, "You have deleted your family plan.");
-            FamilyPlans.remove(familyPlanId);
+            await _notifyFamilyPlanOwner(familyPlanId, "You have deleted your family plan.");
+            await FamilyPlans.removeAsync(familyPlanId);
         },
-        'delete.offer'(offerId) {
+        async 'delete.offer'(offerId) {
             check(offerId, String);
 
-            let _o = FamilyPlanParticipants.findOne(offerId);
+            let _o = await FamilyPlanParticipants.findOneAsync(offerId);
 
             if (!this.userId || !_o || _o.userId !== this.userId) {
                 throw new Meteor.Error("You need to be logged in and be the owner of this family plan.");
@@ -236,12 +237,12 @@ if (Meteor.isServer) {
 
             // if status was "pending" or "joined" (i.e., document has familyPlanId property), decrease members by 1
             if (_o.familyPlanId) {
-                FamilyPlans.update(_o.familyPlanId, { $inc: { members: -1 } });
+                await FamilyPlans.updateAsync(_o.familyPlanId, { $inc: { members: -1 } });
             }
 
-            FamilyPlanParticipants.remove(offerId);
+            await FamilyPlanParticipants.removeAsync(offerId);
         },
-        'respond.tentatively'(id, offeringBool, familyPlanDetails) {
+        async 'respond.tentatively'(id, offeringBool, familyPlanDetails) {
             check(id, String);
             check(offeringBool, Boolean);
 
@@ -252,10 +253,10 @@ if (Meteor.isServer) {
             if (offeringBool) {
                 // this means someone is joining your family plan
                 // check if you already have an open family plan offer for others to join
-                let _joinee = FamilyPlanParticipants.findOne(id);
+                let _joinee = await FamilyPlanParticipants.findOneAsync(id);
                 let _oldStatus = _joinee.status;
 
-                let _yourFamilyPlan = FamilyPlans.findOne({
+                let _yourFamilyPlan = await FamilyPlans.findOneAsync({
                     userId: this.userId,
                     productId: _joinee.productId,
                     $where: function() { return this.members < this.capacity },
@@ -269,7 +270,7 @@ if (Meteor.isServer) {
                     check(familyPlanDetails.notes, String);
 
                     // create a FamilyPlan and a FamilyPlanParticipant for yourself
-                    _familyPlanId = FamilyPlans.insert({
+                    _familyPlanId = await FamilyPlans.insertAsync({
                         productId: _joinee.productId,
                         price: familyPlanDetails.price,
                         userId: this.userId,
@@ -277,7 +278,7 @@ if (Meteor.isServer) {
                         notes: familyPlanDetails.notes,
                         members: 1,
                     });
-                    FamilyPlanParticipants.insert({
+                    await FamilyPlanParticipants.insertAsync({
                         userId: this.userId,
                         familyPlanId: _familyPlanId,
                         status: "joined",
@@ -290,25 +291,25 @@ if (Meteor.isServer) {
                 }
 
                 // increment members by 1
-                FamilyPlans.update(_familyPlanId, { $inc: { members: 1 } });
+                await FamilyPlans.updateAsync(_familyPlanId, { $inc: { members: 1 } });
 
                 // link joinee and mark their status as pending
-                FamilyPlanParticipants.update(_joinee._id, { $set: { familyPlanId: _familyPlanId, status: "pending", lastActionByUserId: this.userId, } });
-                _notifyFamilyPlanParticipant(_joinee._id, "pending", _oldStatus);
-                _notifyFamilyPlanOwner(_familyPlanId, "You sent a request for someone to join your family plan.");
+                await FamilyPlanParticipants.updateAsync(_joinee._id, { $set: { familyPlanId: _familyPlanId, status: "pending", lastActionByUserId: this.userId, } });
+                await _notifyFamilyPlanParticipant(_joinee._id, "pending", _oldStatus);
+                await _notifyFamilyPlanOwner(_familyPlanId, "You sent a request for someone to join your family plan.");
             } else {
                 // this means you are joining someone else's existing, open family plan
-                let _familyPlan = FamilyPlans.findOne(id);
+                let _familyPlan = await FamilyPlans.findOneAsync(id);
 
                 // check if you have any open offers (status "new")
-                let _yourOpenOffer = FamilyPlanParticipants.findOne({
+                let _yourOpenOffer = await FamilyPlanParticipants.findOneAsync({
                     userId: this.userId,
                     productId: _familyPlan.productId,
                     status: "new",
                 });
 
                 if (!_yourOpenOffer) {
-                    let _fppId = FamilyPlanParticipants.insert({
+                    let _fppId = await FamilyPlanParticipants.insertAsync({
                         userId: this.userId,
                         familyPlanId: _familyPlan._id,
                         status: "pending",
@@ -316,19 +317,19 @@ if (Meteor.isServer) {
                         lastActionByUserId: this.userId,
                         price: parseFloat((_familyPlan.price / _familyPlan.capacity).toFixed(2)),
                     });
-                    _notifyFamilyPlanParticipant(_fppId, "pending", "nonExistent");
+                    await _notifyFamilyPlanParticipant(_fppId, "pending", "nonExistent");
                 } else {
-                    FamilyPlanParticipants.update(_yourOpenOffer._id, { $set: { familyPlanId: _familyPlan._id, status: "pending", lastActionByUserId: this.userId, } });
+                    await FamilyPlanParticipants.updateAsync(_yourOpenOffer._id, { $set: { familyPlanId: _familyPlan._id, status: "pending", lastActionByUserId: this.userId, } });
                     let _oldStatus = _yourOpenOffer.status;
-                    _notifyFamilyPlanParticipant(_yourOpenOffer._id, "pending", _oldStatus);
+                    await _notifyFamilyPlanParticipant(_yourOpenOffer._id, "pending", _oldStatus);
                 }
 
                 // increment members by 1
-                FamilyPlans.update(_familyPlan._id, { $inc: { members: 1 } });
-                _notifyFamilyPlanOwner(_familyPlan._id, "Someone has requested to join your family plan.");
+                await FamilyPlans.updateAsync(_familyPlan._id, { $inc: { members: 1 } });
+                await _notifyFamilyPlanOwner(_familyPlan._id, "Someone has requested to join your family plan.");
             }
         },
-        "respond.to.pending.offer"(familyPlanParticipantId, acceptBool) {
+        async "respond.to.pending.offer"(familyPlanParticipantId, acceptBool) {
             check(familyPlanParticipantId, String);
             check(acceptBool, Boolean);
 
@@ -336,23 +337,23 @@ if (Meteor.isServer) {
                 throw new Meteor.Error("You need to be logged in.");
             }
 
-            let _participant = FamilyPlanParticipants.findOne(familyPlanParticipantId);
+            let _participant = await FamilyPlanParticipants.findOneAsync(familyPlanParticipantId);
             let _oldStatus = _participant.status;
 
             if (acceptBool) {
                 // set status to "joined"
-                FamilyPlanParticipants.update(familyPlanParticipantId, {$set: {status: "joined", lastActionByUserId: this.userId,}});
+                await FamilyPlanParticipants.updateAsync(familyPlanParticipantId, {$set: {status: "joined", lastActionByUserId: this.userId,}});
             } else {
                 // decrease FamilyPlan members by 1
-                FamilyPlans.update(_participant.familyPlanId, { $inc: { members: -1 } });
+                await FamilyPlans.updateAsync(_participant.familyPlanId, { $inc: { members: -1 } });
 
                 // set status to "new", unset familyPlanId
-                _unlinkFamilyPlanParticipant(familyPlanParticipantId);
+                await _unlinkFamilyPlanParticipant(this.userId, familyPlanParticipantId);
             }
 
             let _planOwnerIsInitiating = _participant.userId === this.userId;
-            _notifyFamilyPlanParticipant(familyPlanParticipantId, acceptBool ? "joined" : "new", _oldStatus);
-            _notifyFamilyPlanOwner(_participant.familyPlanId, acceptBool ? ("Your family plan now has one more member. The new member's email(s) is(are): " + _getUserEmailAddresses(_participant.userId)) : (_planOwnerIsInitiating ? "You have declined someone's request to join your family plan." : "A potential participant has declined your request for them to join your family plan."));
+            await _notifyFamilyPlanParticipant(familyPlanParticipantId, acceptBool ? "joined" : "new", _oldStatus);
+            await _notifyFamilyPlanOwner(_participant.familyPlanId, acceptBool ? ("Your family plan now has one more member. The new member's email(s) is(are): " + await _getUserEmailAddresses(_participant.userId)) : (_planOwnerIsInitiating ? "You have declined someone's request to join your family plan." : "A potential participant has declined your request for them to join your family plan."));
         },
     })
 }

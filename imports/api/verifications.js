@@ -20,7 +20,7 @@ if (Meteor.isServer) {
     });
 
     Meteor.methods({
-        "addVerification"(type, details) {
+        async "addVerification"(type, details) {
             check(type, String);
             check(details, String);
             if (!this.userId) {
@@ -31,15 +31,15 @@ if (Meteor.isServer) {
             }
 
             console.log(type, details);
-            return Verifications.insert({userId: this.userId, type: type, details: details});
+            return Verifications.insertAsync({userId: this.userId, type: type, details: details});
         },
-        "removeVerification"(verificationId) {
+        async "removeVerification"(verificationId) {
             check(verificationId, String);
             if (!this.userId) {
                 throw new Meteor.Error("You need to be logged in.");
             }
 
-            Verifications.remove(verificationId);
+            await Verifications.removeAsync(verificationId);
         },
     });
 }

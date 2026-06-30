@@ -6,28 +6,28 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.29.7",
-    "@fortawesome/fontawesome-svg-core": "^1.2.0-14",
-    "@fortawesome/free-solid-svg-icons": "^5.1.0-11",
+    "@fortawesome/fontawesome-svg-core": "^1.2.36",
+    "@fortawesome/free-solid-svg-icons": "^5.15.4",
     "@fortawesome/react-fontawesome": "0.1.0-11",
     "@sendgrid/mail": "^8.1.6",
     "ajv": "^8.20.0",
     "bcrypt": "^6.0.0",
-    "bootstrap": "^4.3.1",
-    "classnames": "^2.2.6",
-    "history": "^4.7.2",
+    "bootstrap": "^4.6.2",
+    "classnames": "^2.5.1",
+    "history": "^4.10.1",
     "ini": "^3.0.1",
-    "jquery": "^3.6.1",
+    "jquery": "^3.7.1",
     "meteor-node-stubs": "^1.2.27",
     "pathval": "^1.1.1",
-    "popper.js": "^1.15.0",
+    "popper.js": "^1.16.1",
     "qs": "^6.15.3",
-    "react": "^16.8.6",
-    "react-dom": "^16.8.6",
+    "react": "^16.14.0",
+    "react-dom": "^16.14.0",
     "react-router": "^4.3.1",
     "reactstrap": "^6.5.0",
     "tar": "^7.5.19"
   },
   "devDependencies": {
-    "chai": "^4.1.2"
+    "chai": "^4.5.0"
   }
 }

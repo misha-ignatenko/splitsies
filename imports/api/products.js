@@ -19,7 +19,7 @@ if (Meteor.isServer) {
     });
 
     Meteor.methods({
-        "create.new.product"(categoryId, name, description, company, logoUrl) {
+        async "create.new.product"(categoryId, name, description, company, logoUrl) {
             check(categoryId, String);
             check(name, String);
             check(description, String);
@@ -30,15 +30,15 @@ if (Meteor.isServer) {
                 throw new Meteor.Error("You need to be logged in.");
             }
 
-            if (!Users.findOne(this.userId).admin) {
+            if (!(await Users.findOneAsync(this.userId)).admin) {
                 throw new Meteor.Error("You need to be an admin to add a new product.")
             }
 
-            if (Products.findOne({name: name})) {
+            if (await Products.findOneAsync({name: name})) {
                 throw new Meteor.Error("This product already exists: " + name);
             }
 
-            return Products.insert({categoryId: categoryId, name: name, description: description, company: company, logoUrl: logoUrl});
+            return Products.insertAsync({categoryId: categoryId, name: name, description: description, company: company, logoUrl: logoUrl});
         },
     });
 }
