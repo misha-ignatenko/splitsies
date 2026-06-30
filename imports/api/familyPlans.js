@@ -1,8 +1,6 @@
 import { Meteor } from 'meteor/meteor';
 import { Mongo } from 'meteor/mongo';
 import { check } from 'meteor/check';
-import sgMail from '@sendgrid/mail';
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 export const FamilyPlans = new Mongo.Collection('familyPlans');
 export const FamilyPlanParticipants = new Mongo.Collection('familyPlanParticipants');
@@ -19,9 +17,6 @@ if (Meteor.isServer) {
                 subject: "Splitsies: spend together",
                 html: emailText + "<br/><strong>Check your dashboard here: <a href='https://splitsies.meteorapp.com/dashboard'>https://splitsies.meteorapp.com/dashboard</a></strong>",
             };
-
-            return;
-            sgMail.send(_msg);
         }
     }
 
