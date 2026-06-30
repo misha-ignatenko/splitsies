@@ -10,7 +10,7 @@
     "@fortawesome/free-solid-svg-icons": "^5.1.0-11",
     "@fortawesome/react-fontawesome": "0.1.0-11",
     "@sendgrid/mail": "^8.1.6",
-    "ajv": "^8.11.2",
+    "ajv": "^8.20.0",
     "bcrypt": "^6.0.0",
     "bootstrap": "^4.3.1",
     "classnames": "^2.2.6",
@@ -25,7 +25,7 @@
     "react-dom": "^16.8.6",
     "react-router": "^4.3.1",
     "reactstrap": "^6.5.0",
-    "tar": "^6.2.1"
+    "tar": "^7.5.19"
   },
   "devDependencies": {
     "chai": "^4.1.2"
