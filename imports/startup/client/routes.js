@@ -1,6 +1,6 @@
 import React from 'react';
 import { Router, Route, Switch } from 'react-router';
-import createBrowserHistory from 'history/createBrowserHistory';
+import { createBrowserHistory } from 'history';
 import Nav from '../../ui/Nav.js';
 import Home from '../../ui/Home.js';
 import Products from '../../ui/Products.js';

@@ -10,7 +10,7 @@ if (Meteor.isServer) {
     });
 
     Meteor.methods({
-        "create.new.category"(catName, catDescr) {
+        async "create.new.category"(catName, catDescr) {
             check(catName, String);
             check(catDescr, String);
 
@@ -18,11 +18,11 @@ if (Meteor.isServer) {
                 throw new Meteor.Error("You need to be logged in");
             }
 
-            if (Categories.findOne({name: catName})) {
+            if (await Categories.findOneAsync({name: catName})) {
                 throw new Meteor.Error("This category already exists: " + catName);
             }
 
-            return Categories.insert({name: catName, description: catDescr});
+            return Categories.insertAsync({name: catName, description: catDescr});
         },
     });
 }
