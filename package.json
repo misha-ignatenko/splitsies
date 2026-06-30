@@ -17,7 +17,7 @@
     "history": "^4.7.2",
     "ini": "^3.0.1",
     "jquery": "^3.6.1",
-    "meteor-node-stubs": "^1.2.5",
+    "meteor-node-stubs": "^1.2.27",
     "pathval": "^1.1.1",
     "popper.js": "^1.15.0",
     "qs": "^6.11.0",
